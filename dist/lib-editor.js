@@ -60,187 +60,237 @@ export function t(func, key) {
 /* fonction de rendu du tab pricipal : */
 /***************************************/
 export function tab1Render(appendTo) {
-    
+
     const tabContent = appendTo.shadowRoot.querySelector('#tab-content');
     tabContent.innerHTML = '';
-    
+
     // Ajout du contenu à l'élément appendTo
     const editorDiv = document.createElement('div');
     editorDiv.classList.add('editor');
-    
-    // Choix du thème
-    const themeRow = document.createElement('div');
-    themeRow.classList.add('col');
-    const themeLabel = document.createElement('div');
-    themeLabel.classList.add('left');
-    themeLabel.textContent = t("tab1Render", "theme_choice");//'Choix du theme de la carte :';
-    const radioGroup = document.createElement('div');
-    radioGroup.classList.add('radio-group', 'row');
-    const themeOptions = [
-      { label: t("tab1Render", "light"), value: 'light' }, // claire
-      { label: t("tab1Render", "dark"), value: 'dark' }, // sombre
-      { label: t("tab1Render", "auto"), value: 'auto' }, // auto
-    ];
-    
-    // Vérifiez si aucune option n'est définie dans le YAML
-    const defaultTheme = appendTo._config.theme || 'auto';
-    
-    themeOptions.forEach(option => {
-      const formfield = document.createElement('ha-formfield');
-      formfield.setAttribute('label', option.label);
-      formfield.classList.add('cell');
-      const radio = document.createElement('ha-radio');
-      radio.setAttribute('name', 'themeSelect');
-      radio.setAttribute('data-path', 'theme');
-      radio.setAttribute('value', option.value);
-      if (defaultTheme  === option.value) radio.setAttribute('checked', '');
-      formfield.appendChild(radio);
-      radioGroup.appendChild(formfield);
-    });
-    
-    themeRow.appendChild(themeLabel);
-    themeRow.appendChild(radioGroup);
-    editorDiv.appendChild(themeRow);
-    
+
+   // Choix du thème
+const themeRow = document.createElement('div');
+themeRow.classList.add('col');
+
+const themeLabel = document.createElement('div');
+themeLabel.classList.add('left');
+themeLabel.textContent = t("tab1Render", "theme_choice");
+
+const themeOptions = [
+    { label: t("tab1Render", "light"), value: "light" },
+    { label: t("tab1Render", "dark"), value: "dark" },
+    { label: t("tab1Render", "auto"), value: "auto" },
+];
+
+const defaultTheme = appendTo._config.theme || "auto";
+
+const radioGroup = document.createElement('ha-radio-group');
+radioGroup.classList.add('radio-group');
+radioGroup.setAttribute('data-path', 'theme');
+
+radioGroup.setAttribute('orientation', 'horizontal');
+
+radioGroup.style.alignItems = "center";
+radioGroup.style.flexWrap = "wrap";
+
+themeOptions.forEach(option => {
+    const radio = document.createElement("ha-radio-option");
+    radio.setAttribute("value", option.value);
+    radio.textContent = option.label;
+    radioGroup.appendChild(radio);
+});
+
+radioGroup.value = defaultTheme;
+
+themeRow.appendChild(themeLabel);
+themeRow.appendChild(radioGroup);
+editorDiv.appendChild(themeRow);
+
     // Nombre de "Devices" pour chaque colonne
     const devicesRow = document.createElement('div');
     devicesRow.classList.add('col');
+
     const devicesLabel = document.createElement('div');
     devicesLabel.classList.add('left');
-    devicesLabel.textContent = t("tab1Render", "devices_per_column"); //'Nombre de "Devices" pour chaque colonne :';
-    
+    devicesLabel.textContent = t("tab1Render", "devices_per_column");
+
     const devicesInputs = [
-      { id: 'boxCol1', label: 'col. 1', value: appendTo._config.param?.boxCol1 ?? 1, min: 1, max: 4, step: 1 },
-      { id: 'boxCol2', label: 'col. 2', value: appendTo._config.param?.boxCol2 ?? 1, min: 1, max: 2, step: 1 },
-      { id: 'boxCol3', label: 'col. 3', value: appendTo._config.param?.boxCol3 ?? 1, min: 1, max: 4, step: 1 },
+        {
+            id: 'boxCol1',
+            label: 'col. 1',
+            value: appendTo._config.param?.boxCol1 ?? 1,
+            min: 1,
+            max: 4,
+            step: 1
+        },
+        {
+            id: 'boxCol2',
+            label: 'col. 2',
+            value: appendTo._config.param?.boxCol2 ?? 1,
+            min: 1,
+            max: 2,
+            step: 1
+        },
+        {
+            id: 'boxCol3',
+            label: 'col. 3',
+            value: appendTo._config.param?.boxCol3 ?? 1,
+            min: 1,
+            max: 4,
+            step: 1
+        },
     ];
-    
+
     const devicesRowContainer = document.createElement('div');
     devicesRowContainer.classList.add('row');
+
     devicesInputs.forEach(input => {
-      const textfield = document.createElement('ha-textfield');
-      textfield.classList.add('cell');
-      textfield.setAttribute('id', input.id);
-      textfield.setAttribute('data-path', `param.${input.id}`);
-      textfield.setAttribute('label', input.label);
-      textfield.setAttribute('value', input.value);
-      textfield.setAttribute('type', 'number');
-      textfield.setAttribute('min', input.min);
-      textfield.setAttribute('max', input.max);
-      textfield.setAttribute('step', input.step);
-      devicesRowContainer.appendChild(textfield);
+        const textfield = document.createElement('ha-input');
+        textfield.classList.add('cell');
+        textfield.setAttribute('id', input.id);
+        textfield.setAttribute('data-path', `param.${input.id}`);
+        textfield.setAttribute('label', input.label);
+        textfield.setAttribute('value', input.value);
+        textfield.setAttribute('type', 'number');
+        textfield.setAttribute('min', input.min);
+        textfield.setAttribute('max', input.max);
+        textfield.setAttribute('step', input.step);
+        devicesRowContainer.appendChild(textfield);
     });
+
     devicesRow.appendChild(devicesLabel);
     devicesRow.appendChild(devicesRowContainer);
     editorDiv.appendChild(devicesRow);
-	
-	// Hauteur max des box (%), optionnel
-	const maxHeightRow = document.createElement('div');
-	maxHeightRow.classList.add('col');
 
-	const maxHeightLabel = document.createElement('div');
-	maxHeightLabel.classList.add('left');
-	maxHeightLabel.textContent = t("tab1Render", "max_heigth");
+    // Hauteur max des box (%)
+    const maxHeightRow = document.createElement('div');
+    maxHeightRow.classList.add('col');
 
-	const maxHeightRowContainer = document.createElement('div');
-	maxHeightRowContainer.classList.add('row');
+    const maxHeightLabel = document.createElement('div');
+    maxHeightLabel.classList.add('left');
+    maxHeightLabel.textContent = t("tab1Render", "max_heigth");
 
-	const maxHeightField = document.createElement('ha-textfield');
-	maxHeightField.classList.add('cell');
-	maxHeightField.setAttribute('id', 'maxHeigth');
-	maxHeightField.setAttribute('data-path', 'param.maxHeigth');
-	maxHeightField.setAttribute('label', '%');
-	maxHeightField.setAttribute('type', 'number');
-	maxHeightField.setAttribute('min', 1);
-	maxHeightField.setAttribute('max', 100);
-	maxHeightField.setAttribute('step', 1);
+    const maxHeightRowContainer = document.createElement('div');
+    maxHeightRowContainer.classList.add('row');
 
-	// optionnel : si absent => champ vide (et si l'utilisateur vide => suppression YAML via attachInputs)
-	const mh = appendTo._config.param?.maxHeigth;
-	maxHeightField.setAttribute('value', (mh !== undefined && mh !== null) ? mh : '');
+    const maxHeightField = document.createElement('ha-input');
+    maxHeightField.classList.add('cell');
+    maxHeightField.setAttribute('id', 'maxHeigth');
+    maxHeightField.setAttribute('data-path', 'param.maxHeigth');
+    maxHeightField.setAttribute('label', '%');
+    maxHeightField.setAttribute('type', 'number');
+    maxHeightField.setAttribute('min', 1);
+    maxHeightField.setAttribute('max', 100);
+    maxHeightField.setAttribute('step', 1);
 
-	maxHeightRowContainer.appendChild(maxHeightField);
-	maxHeightRow.appendChild(maxHeightLabel);
-	maxHeightRow.appendChild(maxHeightRowContainer);
+    const mh = appendTo._config.param?.maxHeigth;
+    maxHeightField.setAttribute(
+        'value',
+        (mh !== undefined && mh !== null) ? mh : ''
+    );
 
-	editorDiv.appendChild(maxHeightRow);
-    
-    // Taille de la font dans les zones des "Devices"
+    maxHeightRowContainer.appendChild(maxHeightField);
+    maxHeightRow.appendChild(maxHeightLabel);
+    maxHeightRow.appendChild(maxHeightRowContainer);
+
+    editorDiv.appendChild(maxHeightRow);
+
+    // Taille de la font
     const fontSizeRow = document.createElement('div');
     fontSizeRow.classList.add('col');
+
     const fontSizeLabel = document.createElement('div');
     fontSizeLabel.classList.add('row');
-    fontSizeLabel.textContent = t("tab1Render", "font_size_zones");// 'Taille de la font dans les zones des "Devices" :';
-    fontSizeRow.appendChild(fontSizeLabel);
-    
-    // Définit les sections
-    const fontSizeSections = [
-      { label: t("tab1Render", "in_header"), path: 'header', id: 'header' }, // 'dans le header'
-      { label: t("tab1Render", "in_devices"), path: 'sensor', id: 'sensor' }, // 'dans le Devices'
-      { label: t("tab1Render", "in_footer"), path: 'footer', id: 'footer' }, // 'dans le footer'
-    ];
-    
-    // Boucle sur chaque section
-    fontSizeSections.forEach(section => {
-      const sectionRow = document.createElement('div');
-      sectionRow.classList.add('row');
-    
-      const labelCell = document.createElement('div');
-      labelCell.classList.add('row', 'cellx1-5');
-      const labelText = document.createElement('div');
-      labelText.classList.add('cell', 'left');
-      labelText.textContent = `- ${section.label}`;
-      labelCell.appendChild(labelText);
-      sectionRow.appendChild(labelCell);
-    
-      const inputCell = document.createElement('div');
-      inputCell.classList.add('cell', 'right');
-      const textfield = document.createElement('ha-textfield');
-      textfield.setAttribute('id', section.id);
-      textfield.setAttribute('data-path', `styles.${section.path}`);
-      textfield.setAttribute('data-group', section.path);
-      textfield.setAttribute('label', t("tab1Render", "font_size"));
-      textfield.setAttribute('type', 'number');
-      textfield.setAttribute('min', 1);
-      textfield.setAttribute('step', 1);
-    
-      // Vérifie si la clé existe avant de définir sa valeur ou d'activer le champ
-      if (appendTo._config.styles && appendTo._config.styles[section.path]) {
-        if (appendTo._config.styles[section.path] === 'auto') {
-          textfield.setAttribute('disabled', '');
-        } else {
-          textfield.setAttribute('value', appendTo._config.styles[section.path]);
-        }
-      }
-      
-      inputCell.appendChild(textfield);
-      sectionRow.appendChild(inputCell);
-    
-      const switchCell = document.createElement('div');
-      switchCell.classList.add('row', 'cell');
-      const switchContainer = document.createElement('div');
-      switchContainer.classList.add('cell', 'right');
-      const fontSwitch = document.createElement('ha-switch');
-      fontSwitch.setAttribute('data-path', `styles.${section.path}`);
-      fontSwitch.setAttribute('data-group', section.path);
-    
-      // Activer le switch uniquement si la clé existe et que sa valeur est "auto"
-      if (appendTo._config.styles && appendTo._config.styles[section.path] === 'auto') {
-        fontSwitch.setAttribute('checked', '');
-      }
-    
-      switchContainer.appendChild(fontSwitch);
-      switchCell.appendChild(switchContainer);
-      sectionRow.appendChild(switchCell);
-    
-      fontSizeRow.appendChild(sectionRow);
-    });
-    
-    editorDiv.appendChild(fontSizeRow);
-    
-    // Ajouter le contenu au DOM
-    tabContent.appendChild(editorDiv);
+    fontSizeLabel.textContent = t("tab1Render", "font_size_zones");
 
+    fontSizeRow.appendChild(fontSizeLabel);
+
+    const fontSizeSections = [
+        {
+            label: t("tab1Render", "in_header"),
+            path: 'header',
+            id: 'header'
+        },
+        {
+            label: t("tab1Render", "in_devices"),
+            path: 'sensor',
+            id: 'sensor'
+        },
+        {
+            label: t("tab1Render", "in_footer"),
+            path: 'footer',
+            id: 'footer'
+        },
+    ];
+
+    fontSizeSections.forEach(section => {
+
+        const sectionRow = document.createElement('div');
+        sectionRow.classList.add('row');
+
+        const labelCell = document.createElement('div');
+        labelCell.classList.add('row', 'cellx1-5');
+
+        const labelText = document.createElement('div');
+        labelText.classList.add('cell', 'left');
+        labelText.textContent = `- ${section.label}`;
+
+        labelCell.appendChild(labelText);
+        sectionRow.appendChild(labelCell);
+
+        const inputCell = document.createElement('div');
+        inputCell.classList.add('cell', 'right');
+
+        const textfield = document.createElement('ha-input');
+        textfield.setAttribute('id', section.id);
+        textfield.setAttribute('data-path', `styles.${section.path}`);
+        textfield.setAttribute('data-group', section.path);
+        textfield.setAttribute('label', t("tab1Render", "font_size"));
+        textfield.setAttribute('type', 'number');
+        textfield.setAttribute('min', 1);
+        textfield.setAttribute('step', 1);
+
+        if (appendTo._config.styles && appendTo._config.styles[section.path]) {
+            if (appendTo._config.styles[section.path] === 'auto') {
+                textfield.setAttribute('disabled', '');
+            } else {
+                textfield.setAttribute(
+                    'value',
+                    appendTo._config.styles[section.path]
+                );
+            }
+        }
+
+        inputCell.appendChild(textfield);
+        sectionRow.appendChild(inputCell);
+
+        const switchCell = document.createElement('div');
+        switchCell.classList.add('row', 'cell');
+
+        const switchContainer = document.createElement('div');
+        switchContainer.classList.add('cell', 'right');
+
+        const fontSwitch = document.createElement('ha-switch');
+        fontSwitch.setAttribute('data-path', `styles.${section.path}`);
+        fontSwitch.setAttribute('data-group', section.path);
+
+        if (
+            appendTo._config.styles &&
+            appendTo._config.styles[section.path] === 'auto'
+        ) {
+            fontSwitch.setAttribute('checked', '');
+        }
+
+        switchContainer.appendChild(fontSwitch);
+        switchCell.appendChild(switchContainer);
+        sectionRow.appendChild(switchCell);
+
+        fontSizeRow.appendChild(sectionRow);
+    });
+
+    editorDiv.appendChild(fontSizeRow);
+
+    tabContent.appendChild(editorDiv);
 }
 
 /**********************************************/
@@ -331,7 +381,7 @@ export function subtabRender(box, config, hass, appendTo) {
         <!-- ICON ET NOM -->
         <ha-expansion-panel expanded outlined id="subPanel_header" header="${t("subtabRender", "header_title")}">
             <div class="col inner">
-                <div class="row">
+                <div class="col">
                     <ha-icon-picker
                         class="cell"
                         label="${t("subtabRender", "icon_choice")}"
@@ -339,12 +389,12 @@ export function subtabRender(box, config, hass, appendTo) {
                         data-path="devices.${box}.icon"
                     >
                     </ha-icon-picker>
-                    <ha-textfield 
+                    <ha-input 
                         class="cell"
                         label="${t("subtabRender", "name_choice")}"
                         id="device_name"
                         data-path="devices.${box}.name"
-                    ></ha-textfield>
+                    ></ha-input>
                 </div>
             </div>
         </ha-expansion-panel>
@@ -369,14 +419,14 @@ export function subtabRender(box, config, hass, appendTo) {
 					
 					<!-- RANGE GRAPH -->
 					<div class="row graph-range-row">
-					  <ha-textfield class="cell"
+					  <ha-input class="cell"
 						id="graph_range"
 						label="${t("subtabRender", "graph_range")}"
 						data-path="devices.${box}.rangeGraph"
 						type="number"
 						min="1"
 						step="1"
-					  ></ha-textfield>
+					  ></ha-input>
 					</div>
 					
 					<!-- SWITCH MIN and MAX -->
@@ -437,14 +487,14 @@ export function subtabRender(box, config, hass, appendTo) {
 			<ha-form class="cell" id="sideGauge_entity_form"></ha-form>
 
 			<div class="row">
-			  <ha-textfield class="cell"
+			  <ha-input class="cell"
 				id="sideGauge_max"
 				label="${t("subtabRender", "side_gauge_max")}"
 				data-path="devices.${box}.sideGaugeMax"
 				type="number"
 				min="1"
 				step="1"
-			  ></ha-textfield>
+			  ></ha-input>
 			</div>
 		  </div>
 		</ha-expansion-panel>
@@ -482,7 +532,7 @@ export function subtabRender(box, config, hass, appendTo) {
             <div class="col inner">
                 <div class="row">
                     <div class="col cell">
-                        <ha-textfield class="anchor cell"
+                        <ha-input class="anchor cell"
                             id="anchor_left"
                             data-path="devices.${box}.anchors" 
                             label="${t("subtabRender", "left_qtyBox")}"
@@ -491,10 +541,10 @@ export function subtabRender(box, config, hass, appendTo) {
                             min="0"
                             max="3"
                             step="1"
-                        ></ha-textfield>
+                        ></ha-input>
                     </div>
                     <div class="col cell">
-                        <ha-textfield class="anchor cell"
+                        <ha-input class="anchor cell"
                             id="anchor_top"
                             data-path="devices.${box}.anchors" 
                             label="${t("subtabRender", "top_qtyBox")}"
@@ -503,8 +553,8 @@ export function subtabRender(box, config, hass, appendTo) {
                             min="0"
                             max="3"
                             step="1"
-                        ></ha-textfield>
-                        <ha-textfield class="anchor cell"
+                        ></ha-input>
+                        <ha-input class="anchor cell"
                             id="anchor_bottom"
                             data-path="devices.${box}.anchors" 
                             label="${t("subtabRender", "bottom_qtyBox")}"
@@ -513,10 +563,10 @@ export function subtabRender(box, config, hass, appendTo) {
                             min="0"
                             max="3"
                             step="1"
-                        ></ha-textfield>
+                        ></ha-input>
                     </div>
                     <div class="col cell">
-                        <ha-textfield class="anchor cell"
+                        <ha-input class="anchor cell"
                             id="anchor_right"
                             data-path="devices.${box}.anchors" 
                             label="${t("subtabRender", "right_qtyBox")}"
@@ -525,7 +575,7 @@ export function subtabRender(box, config, hass, appendTo) {
                             min="0"
                             max="3"
                             step="1"
-                        ></ha-textfield>
+                        ></ha-input>
                     </div>
                 </div>
             </div>
@@ -556,6 +606,7 @@ export function subtabRender(box, config, hass, appendTo) {
     const graphSwitch = subTabContent.querySelector('#graph_switch');
 	const graphRangeField = subTabContent.querySelector('#graph_range');
 	const graphMinMaxSwitch = subTabContent.querySelector('#graph_minmax_switch');
+	const graphRangeRow = subTabContent.querySelector('.graph-range-row');
 	const graphMinMaxRow = subTabContent.querySelector('.graph-minmax-row');
     const gaugeSwitch = subTabContent.querySelector('#gauge_switch');
 	const gaugeTextureSwitch = subTabContent.querySelector('#gaugeTexture_switch');
@@ -612,7 +663,7 @@ export function subtabRender(box, config, hass, appendTo) {
 
       // helper: create a textfield
       const mkText = (id, label, path, type = "text") => {
-        const tf = document.createElement("ha-textfield");
+        const tf = document.createElement("ha-input");
         tf.classList.add("cell");
         tf.id = id;
         tf.setAttribute("label", label);
@@ -1148,14 +1199,14 @@ export function addLink(index, box, hass, thisAllAnchors, OtherAllAnchors, appen
                     </div>
                 </div>
 				<div class="row">
-                    <ha-textfield class="cell"
+                    <ha-input class="cell"
                         id="threshold_link_${index}"
                         label="${t("addLink", "threshold")}"
                         data-path="devices.${box}.link.${index}.animationThreshold"
                         type="number"
                         min="0"
                         step="1"
-                    ></ha-textfield>
+                    ></ha-input>
                 </div>
             </div>
         </div>
@@ -1238,7 +1289,7 @@ export function addLink(index, box, hass, thisAllAnchors, OtherAllAnchors, appen
 
 export function attachLinkInputs(appendTo) {
         
-    // Listener pour les `ha-textfield` sauf les champs "anchor"
+    // Listener pour les `ha-input` sauf les champs "anchor"
     appendTo.shadowRoot.querySelectorAll('ha-combo-box').forEach((comboBox) => {
         
         if (eventHandlers.has(comboBox)) {
@@ -1277,11 +1328,11 @@ export function attachLinkInputs(appendTo) {
         
     });
     
-    // Listener pour les `ha-textfield` sauf les champs "anchor"
-    appendTo.shadowRoot.querySelectorAll('ha-textfield').forEach((textField) => {
+    // Listener pour les `ha-input` sauf les champs "anchor"
+    appendTo.shadowRoot.querySelectorAll('ha-input').forEach((textField) => {
         
         if (eventHandlers.has(textField)) {
-            //console.log("Événement déjà attaché à cet élément ha-textfield :", textField);
+            //console.log("Événement déjà attaché à cet élément ha-input :", textField);
             return; // Ne rien faire si l'événement est déjà attaché
         }
         
@@ -1368,11 +1419,11 @@ export function attachLinkInputs(appendTo) {
 /************************************************/
 export function attachInputs(appendTo) {
         
-    // Listener pour les `ha-textfield` sauf les champs "anchor"
-    appendTo.shadowRoot.querySelectorAll('ha-textfield:not(.anchor)').forEach((textField) => {
+    // Listener pour les `ha-input` sauf les champs "anchor"
+    appendTo.shadowRoot.querySelectorAll('ha-input:not(.anchor)').forEach((textField) => {
         
         if (eventHandlers.has(textField)) {
-            //console.log("Événement déjà attaché à cet élément ha-textfield :", textField);
+            //console.log("Événement déjà attaché à cet élément ha-input :", textField);
             return; // Ne rien faire si l'événement est déjà attaché
         }
         
@@ -1413,7 +1464,7 @@ export function attachInputs(appendTo) {
     });
 
     // Listener pour les champs "anchor"
-    appendTo.shadowRoot.querySelectorAll('ha-textfield.anchor').forEach((textField) => {
+    appendTo.shadowRoot.querySelectorAll('ha-input.anchor').forEach((textField) => {
         
         if (eventHandlers.has(textField)) {
             return; // Ne rien faire si l'événement est déjà attaché
@@ -1485,7 +1536,7 @@ export function attachInputs(appendTo) {
             
             if (group) {
                 // Trouver le champ texte associé au switch
-                const textField = appendTo.shadowRoot.querySelector(`ha-textfield[data-group="${group}"]`);
+                const textField = appendTo.shadowRoot.querySelector(`ha-input[data-group="${group}"]`);
                 const key2 = textField.dataset.path;
         
                 if (isChecked) {
@@ -1528,31 +1579,22 @@ export function attachInputs(appendTo) {
     });
     
     // Listener pour les `ha-radio`
-    appendTo.shadowRoot.querySelectorAll('ha-radio').forEach((radio) => {
-        
-        if (eventHandlers.has(radio)) {
-            //console.log("Événement déjà attaché à cet élément ha-radio :", radio);
-            return; // Ne rien faire si l'événement est déjà attaché
-        }
-        
-        // Créer un nouveau gestionnaire d'événements
-        const handleChange = (e) => {
-            const key = radio.dataset.path; // Assurez-vous que le `name` correspond à la clé dans la config
-            const value = e.target.value; // 'light', 'dark', 'auto'
-    
-            if (key) {
-                appendTo._config = updateConfigRecursively(appendTo._config, key, value, true);
-                notifyConfigChange(appendTo);
-            }
-        };
-        
-        // Ajouter l'événement
-        radio.addEventListener("change", handleChange);
-        
-        // Enregistrer le gestionnaire dans le WeakMap
-        eventHandlers.set(radio, handleChange);
-        
-    });
+    appendTo.shadowRoot.querySelectorAll('ha-radio-group').forEach((radioGroup) => {
+	  if (eventHandlers.has(radioGroup)) return;
+
+	  const handleChange = (e) => {
+		const key = radioGroup.dataset.path;
+		const value = e.target.value;
+
+		if (key) {
+		  appendTo._config = updateConfigRecursively(appendTo._config, key, value, true);
+		  notifyConfigChange(appendTo);
+		}
+	  };
+
+	  radioGroup.addEventListener("change", handleChange);
+	  eventHandlers.set(radioGroup, handleChange);
+	});
           
     // Listener pour les `ha-icon-picker`
     appendTo.shadowRoot.querySelectorAll('ha-icon-picker').forEach((iconPicker) => {
