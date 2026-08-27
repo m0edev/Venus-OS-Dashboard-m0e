@@ -643,14 +643,25 @@ export function fillBox(config, styles, isDark, hass, appendTo) {
 		}
 
 		// --- Pulsation d'alarme sur la bordure de la box (optionnel) ---
-		// alarmEntity : etat "on"/"alarm"/2 => rouge ; "warning"/1 => orange.
-		// Victron : 0 = pas d'alarme, 1 = warning, 2 = alarme.
+		// Mode par defaut : etat "on"/"alarm"/2 => rouge ; "warning"/1 => orange
+		// (Victron : 0 = pas d'alarme, 1 = warning, 2 = alarme).
+		// Mode alarmOkStates : tout etat HORS de cette liste => rouge — pour les
+		// template sensors qui produisent un texte libre ("OK" / nom de l'alarme).
 		box.classList.remove("alarmWarn", "alarmCrit");
 
 		if (device.alarmEntity) {
-		  const alarmRaw = String(hass.states?.[device.alarmEntity]?.state ?? "").toLowerCase();
+		  const alarmRaw = String(hass.states?.[device.alarmEntity]?.state ?? "").toLowerCase().trim();
 
-		  if (alarmRaw === "on" || alarmRaw === "2" || alarmRaw === "alarm") {
+		  if (device.alarmOkStates !== undefined && device.alarmOkStates !== null) {
+			const okList = (Array.isArray(device.alarmOkStates) ? device.alarmOkStates : [device.alarmOkStates])
+			  .map((v) => String(v).toLowerCase().trim());
+			// indisponible/inconnu n'est pas une alarme
+			const neverAlarm = ["", "unavailable", "unknown"];
+
+			if (!okList.includes(alarmRaw) && !neverAlarm.includes(alarmRaw)) {
+			  box.classList.add("alarmCrit");
+			}
+		  } else if (alarmRaw === "on" || alarmRaw === "2" || alarmRaw === "alarm") {
 			box.classList.add("alarmCrit");
 		  } else if (alarmRaw === "1" || alarmRaw === "warning") {
 			box.classList.add("alarmWarn");

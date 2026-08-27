@@ -84,7 +84,7 @@ Everything below is specific to this fork and is not in
 | **Alarm pulse** — `alarmEntity:` | The box border pulses orange/red while an alarm entity is active. |
 | **Label styling** — `styles.labelStyle` | Casing, weight, opacity and size of the value captions. |
 
-The card also prints `version 0.9.0 (m0e fork)` in the browser console, so
+The card also prints `version 0.9.1 (m0e fork)` in the browser console, so
 you can tell which module loaded when both are installed.
 
 ------------------------------------------------------------------------
@@ -306,6 +306,15 @@ border pulses:
 `on`, `2` or `alarm` pulse red; `1` or `warning` pulse orange (Victron
 alarm sensors report 0 / 1 / 2). Also settable from the UI editor, in the
 box's header panel.
+
+For a template sensor that reports free text (e.g. `OK` normally and an
+alarm name when active), declare which states mean "no alarm" instead —
+anything else pulses red (`unavailable`/`unknown` never count as alarms):
+
+``` yaml
+    alarmEntity: sensor.victron_system_alarms_status
+    alarmOkStates: [OK]
+```
 
 **Label styling** — restyle the value captions card-wide, under `styles:`:
 
