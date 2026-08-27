@@ -81,7 +81,7 @@ Everything below is specific to this fork and is not in
 | **Render skipping** | The card previously re-rendered on *every* state change in your HA instance; it now skips ticks where nothing it displays has changed. |
 | **CI language check** | A workflow job fails if any translation file drifts out of sync with `lang-en.js`. |
 
-The card also prints `version 0.8.0 (m0e fork)` in the browser console, so
+The card also prints `version 0.8.1 (m0e fork)` in the browser console, so
 you can tell which module loaded when both are installed.
 
 ------------------------------------------------------------------------

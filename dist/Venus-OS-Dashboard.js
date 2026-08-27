@@ -7,7 +7,7 @@
 */
 
 console.info(
-  "%c 🗲 %c - %cVenus OS DB%c - %c 🗲 \n%c version 0.8.0 (m0e fork) ",
+  "%c 🗲 %c - %cVenus OS DB%c - %c 🗲 \n%c version 0.8.1 (m0e fork) ",
   "color: white; font-weight: bold; background: black",
   "color: orange; font-weight: bold; background: blue; font-weight: bold;",
   "color: white; font-weight: bold; background: blue; text-decoration: underline; text-decoration-color: orange; text-decoration-thickness: 5px; text-underline-offset: 2px;",
@@ -16,11 +16,11 @@ console.info(
   "color: white; font-weight: bold; background: grey"
 );
 
-import './editor.js';
-import * as libVenus from './lib-venus.js';
+import './editor.js?v=0.8.1';
+import * as libVenus from './lib-venus.js?v=0.8.1';
 
-import { cssDataDark } from './css-dark.js?v=0.1';
-import { cssDataLight } from './css-light.js?v=0.1';
+import { cssDataDark } from './css-dark.js?v=0.8.1';
+import { cssDataLight } from './css-light.js?v=0.8.1';
 
 class venusOsDashboardCard extends HTMLElement {
 
@@ -89,6 +89,9 @@ class venusOsDashboardCard extends HTMLElement {
   set hass(hass) {
 
     this._hass = hass;
+
+    // hass peut arriver avant setConfig (card-mod, previews) : on attend la config
+    if (!this.config) return;
 
     if (this._hass) {
 
