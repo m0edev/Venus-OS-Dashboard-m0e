@@ -327,6 +327,50 @@ export function cssDataLight(user) {
 			width: 30%;
 			gap: 5%;
 		}
+
+		/* --- libelles optionnels au dessus des valeurs --- */
+		.entityLabel {
+			font-size: 0.7em;
+			line-height: 1.2em;
+			font-weight: 600;
+			text-transform: uppercase;
+			letter-spacing: 0.08em;
+			opacity: 0.5;
+			max-width: 100%;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+			z-index: 2;
+		}
+		
+		.entityValue {
+			display: flex;
+			align-items: center;
+			gap: 0.25em;
+		}
+		
+		.footerCell.hasLabel,
+		.headerEntity.hasLabel,
+		.boxSensor2.hasLabel {
+			flex-direction: column;
+			justify-content: flex-end;
+			gap: 0;
+		}
+		
+		.footerCell.hasLabel {
+			align-items: center;
+		}
+		
+		.headerEntity.hasLabel,
+		.boxSensor2.hasLabel {
+			align-items: flex-start;
+		}
+		
+		/* les cellules libellees sont plus hautes : on aligne  */
+		/* toutes les valeurs du footer sur le bas              */
+		.boxFooter.hasLabel {
+			align-items: flex-end;
+		}
 		
 		.box{
 		  position: relative; /* important */

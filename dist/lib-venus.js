@@ -23,6 +23,41 @@ function getState(appendTo) {
   return s;
 }
 
+/**********************************************/
+/* echappe le texte libre saisi par           */
+/* l'utilisateur (labels) avant injection     */
+/**********************************************/
+function escapeHtml(text) {
+    return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+
+/**********************************************/
+/* rend une valeur (header, entity2, cellule  */
+/* footer) avec un libelle optionnel au       */
+/* dessus. Sans libelle, le markup reste      */
+/* strictement identique a l'existant.        */
+/**********************************************/
+function labeledValue(baseClass, label, inner, addStyle = "") {
+
+    const text = typeof label === "string" ? label.trim() : "";
+
+    if (!text) {
+        return `<div class="${baseClass}"${addStyle}>${inner}</div>`;
+    }
+
+    return `
+        <div class="${baseClass} hasLabel"${addStyle}>
+            <div class="entityLabel">${escapeHtml(text)}</div>
+            <div class="entityValue">${inner}</div>
+        </div>
+    `;
+}
+
 /************************************************/
 /* fonction de rendu du squelette de la carte : */
 /* rend une image si dans le YAML, mode = DEMO  */
@@ -343,9 +378,11 @@ export function fillBox(config, styles, isDark, hass, appendTo) {
             const valueHeaderEnt = stateHeaderEnt ? stateHeaderEnt.state : '';
             const unitvalueHeaderEnt = stateHeaderEnt && stateHeaderEnt.attributes.unit_of_measurement ? stateHeaderEnt.attributes.unit_of_measurement : '';
                 
-            addHeaderEntity = `
-                <div class="headerEntity">${valueHeaderEnt}<div class="boxUnit">${unitvalueHeaderEnt}</div></div>
-            `;
+            addHeaderEntity = labeledValue(
+                "headerEntity",
+                device.headerLabel,
+                `${valueHeaderEnt}<div class="boxUnit">${unitvalueHeaderEnt}</div>`
+            );
         }
         
         if(device.entity2) {
@@ -353,9 +390,12 @@ export function fillBox(config, styles, isDark, hass, appendTo) {
             const valueEntity2 = stateEntity2 ? stateEntity2.state : '';
             const unitvalueEntity2 = stateEntity2 && stateEntity2.attributes.unit_of_measurement ? stateEntity2.attributes.unit_of_measurement : '';
                 
-            addEntity2 = `
-                <div class="boxSensor2"${addSensor2Style}>${valueEntity2}<div class="boxUnit">${unitvalueEntity2}</div></div>
-            `;
+            addEntity2 = labeledValue(
+                "boxSensor2",
+                device.entity2Label,
+                `${valueEntity2}<div class="boxUnit">${unitvalueEntity2}</div>`,
+                addSensor2Style
+            );
         }
             
         if(device.footerEntity1) {
@@ -372,12 +412,22 @@ export function fillBox(config, styles, isDark, hass, appendTo) {
             const valueFooterEnt3 = stateFooterEnt3 ? stateFooterEnt3.state : '';
             const unitvalueFooterEnt3 = stateFooterEnt3 && stateFooterEnt3.attributes.unit_of_measurement ? stateFooterEnt3.attributes.unit_of_measurement : '';
             
+            const footerCells = [
+                { label: device.footerLabel1, value: valueFooterEnt1, unit: unitvalueFooterEnt1 },
+                { label: device.footerLabel2, value: valueFooterEnt2, unit: unitvalueFooterEnt2 },
+                { label: device.footerLabel3, value: valueFooterEnt3, unit: unitvalueFooterEnt3 },
+            ];
+
+            // si au moins une cellule porte un libelle, on aligne les
+            // valeurs sur le bas pour qu'elles restent sur une meme ligne
+            const hasFooterLabel = footerCells.some(cell => typeof cell.label === "string" && cell.label.trim() !== "");
+
+            const footerCellsHtml = footerCells
+                .map(cell => labeledValue("footerCell", cell.label, `${cell.value}<div class="boxUnit">${cell.unit}</div>`))
+                .join("");
+
             addFooter = `
-                <div class="boxFooter"${addFooterStyle}>
-                    <div class="footerCell">${valueFooterEnt1}<div class="boxUnit">${unitvalueFooterEnt1}</div></div>
-                    <div class="footerCell">${valueFooterEnt2}<div class="boxUnit">${unitvalueFooterEnt2}</div></div>
-                    <div class="footerCell">${valueFooterEnt3}<div class="boxUnit">${unitvalueFooterEnt3}</div></div>
-                </div>
+                <div class="boxFooter${hasFooterLabel ? " hasLabel" : ""}"${addFooterStyle}>${footerCellsHtml}</div>
             `;
         }
             

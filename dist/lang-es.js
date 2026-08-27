@@ -1,4 +1,4 @@
-port default {
+export default {
   tab1Render: {
     theme_choice: "Seleccionar tema de la tarjeta:",
     light: "Claro",
@@ -19,6 +19,7 @@ port default {
     sensor_title: "Configuración del sensor principal",
     entity_choice: "Selector de entidad",
     entity2_choice: "Selector de entidad secundaria",
+    entity2_label: "Etiqueta de la entidad secundaria (opcional)",
     decimals_choice: "Decimales",
     enable_graph: "Activar gráfico",
 	graph_range: "Duración del gráfico (h)",
@@ -36,9 +37,13 @@ port default {
 	side_gauge_max: "Valor máximo",
     header_footer_title: "Configuración de sensores de cabecera y pie",
     entity_header: "Seleccionar entidad de cabecera",
+    header_label: "Etiqueta de cabecera (opcional)",
     entity_footer: "Seleccionar entidad de pie",
+    footer_label: "Etiqueta de pie (opcional)",
     entity2_footer: "Seleccionar 2ª entidad de pie",
+    footer2_label: "2ª etiqueta de pie (opcional)",
     entity3_footer: "Seleccionar 3ª entidad de pie",
+    footer3_label: "3ª etiqueta de pie (opcional)",
     anchor_title: "Añadir ancla",
     left_qtyBox: "Izquierda",
     top_qtyBox: "Arriba",

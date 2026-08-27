@@ -56,6 +56,7 @@ Some features are inspired by KeonHHH's fork — thanks to him 🙏
 -   Optional background texture for the main gauge
 -   Optional wave animation for the main gauge
 -   Redesigned tap action management
+-   Optional text labels above the header, secondary and footer values
 
 ------------------------------------------------------------------------
 
@@ -185,6 +186,49 @@ Options include:
 
 ------------------------------------------------------------------------
 
+### Value labels (captions)
+
+The header value, the secondary value and each of the three footer cells can
+carry an optional short caption, displayed just above the value:
+
+``` yaml
+devices:
+  2-1:
+    icon: mdi:sine-wave
+    name: Inverter
+    entity: sensor.venus_os_inverter_power
+    headerEntity: sensor.venus_os_inverter_temp
+    headerLabel: Temp
+    entity2: sensor.venus_os_battery_voltage
+    entity2Label: Batt
+    footerEntity1: sensor.venus_os_ess_setpoint
+    footerLabel1: ESS
+    footerEntity2: sensor.venus_os_ac_current
+    footerEntity3: sensor.venus_os_mppt_state
+    footerLabel3: MPPT
+```
+
+All five keys (`headerLabel`, `entity2Label`, `footerLabel1`, `footerLabel2`,
+`footerLabel3`) are optional and also editable from the UI editor, in the
+**Main sensor configuration** and **Header and footer sensors configuration**
+panels.
+
+Notes:
+
+ - A cell without a label keeps exactly the same markup and layout as before,
+   so existing dashboards are unaffected.
+
+ - When at least one footer cell has a label, the footer values are
+   bottom-aligned so they stay on a single line.
+
+ - Labels are plain text and are HTML-escaped, so `&`, `<` and `>` are safe to
+   use.
+
+ - This replaces the usual `card-mod` + `::before` workaround, which depended
+   on the card's internal class names and IDs.
+
+------------------------------------------------------------------------
+
 ### New action menu
 
 A new ha-expansion-panel allows configuring box actions:
@@ -258,9 +302,15 @@ A map of device boxes keyed by "<column>-<box>" (for example 1-1, 2-1, 3-2). Eac
 
 - headerEntity — optional small value shown in header (e.g., battery temperature).
 
+- headerLabel — optional caption displayed above the headerEntity value.
+
 - entity2 — optional second sensor shown near main sensor (smaller).
 
+- entity2Label — optional caption displayed above the entity2 value.
+
 - footerEntity1 / footerEntity2 / footerEntity3 — optional values shown in the footer row (three cols).
+
+- footerLabel1 / footerLabel2 / footerLabel3 — optional captions displayed above the matching footer values.
 
 - graph: true — show mini-history graph in that box (requires historical data).
 

@@ -404,6 +404,11 @@ export function subtabRender(box, config, hass, appendTo) {
             <div class="col inner">
                 <ha-form class="cell" id="device_sensor_form"></ha-form>
 				<ha-form class="cell" id="device_sensor2_form"></ha-form>
+				<ha-input class="cell"
+				  id="device_sensor2_label"
+				  label="${t("subtabRender", "entity2_label")}"
+				  data-path="devices.${box}.entity2Label"
+				></ha-input>
     
                 <div class="box-settings">
 					<!-- SWITCH GRAPH -->
@@ -519,11 +524,33 @@ export function subtabRender(box, config, hass, appendTo) {
         <ha-expansion-panel outlined id="subPanel_entities2" header="${t("subtabRender", "header_footer_title")}">
             <div class="col inner">
 				<ha-form class="cell" id="header_sensor_form"></ha-form>
+				<ha-input class="cell"
+				  id="header_sensor_label"
+				  label="${t("subtabRender", "header_label")}"
+				  data-path="devices.${box}.headerLabel"
+				></ha-input>
+
 				<ha-form class="cell" id="footer1_sensor_form"></ha-form>
+				<ha-input class="cell"
+				  id="footer1_sensor_label"
+				  label="${t("subtabRender", "footer_label")}"
+				  data-path="devices.${box}.footerLabel1"
+				></ha-input>
 				           
                 <!-- FOOTER 2 ET 3 -->
 				<ha-form class="cell" id="footer2_sensor_form"></ha-form>
+				<ha-input class="cell"
+				  id="footer2_sensor_label"
+				  label="${t("subtabRender", "footer2_label")}"
+				  data-path="devices.${box}.footerLabel2"
+				></ha-input>
+
 				<ha-form class="cell" id="footer3_sensor_form"></ha-form>
+				<ha-input class="cell"
+				  id="footer3_sensor_label"
+				  label="${t("subtabRender", "footer3_label")}"
+				  data-path="devices.${box}.footerLabel3"
+				></ha-input>
             </div>
         </ha-expansion-panel>
         
@@ -874,6 +901,20 @@ export function subtabRender(box, config, hass, appendTo) {
     
     // Après avoir inséré le contenu, configure les valeurs pour ha-icon-picker et ha-entity-picker
     nameField.value = config?.devices?.[box]?.name ?? "";
+
+    // libelles optionnels affiches au dessus des valeurs
+    const labelFields = {
+        device_sensor2_label: "entity2Label",
+        header_sensor_label: "headerLabel",
+        footer1_sensor_label: "footerLabel1",
+        footer2_sensor_label: "footerLabel2",
+        footer3_sensor_label: "footerLabel3",
+    };
+
+    Object.entries(labelFields).forEach(([id, key]) => {
+        const field = subTabContent.querySelector(`#${id}`);
+        if (field) field.value = config?.devices?.[box]?.[key] ?? "";
+    });
     iconPicker.value = config?.devices?.[box]?.icon ?? ""; 
     
     iconPicker.hass = hass; // Passe l'objet directement ici

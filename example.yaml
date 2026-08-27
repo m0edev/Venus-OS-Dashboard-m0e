@@ -55,9 +55,13 @@ devices:
     gauge: true
     entity2: sensor.venus_os_battery_remaining
     headerEntity: sensor.venus_os_battery_temp
+    headerLabel: Temp
     footerEntity1: sensor.venus_os_battery_voltage
+    footerLabel1: Tension
     footerEntity2: sensor.venus_os_battery_current
+    footerLabel2: Courant
     footerEntity3: sensor.venus_os_battery_loads
+    footerLabel3: Charge
   3-1:
     anchors: L-1
     icon: mdi:home-lightning-bolt-outline
