@@ -26,7 +26,7 @@ export async function loadTranslations(appendTo) {
   const lang = langRaw.toLowerCase().split("-")[0];
 
   async function tryImport(l) {
-    const url = new URL(`./lang-${l}.js?v=0.9.1`, import.meta.url).toString();
+    const url = new URL(`./lang-${l}.js?v=0.9.2`, import.meta.url).toString();
     return import(url);
   }
 

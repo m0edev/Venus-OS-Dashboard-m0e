@@ -84,7 +84,7 @@ Everything below is specific to this fork and is not in
 | **Alarm pulse** — `alarmEntity:` | The box border pulses orange/red while an alarm entity is active. |
 | **Label styling** — `styles.labelStyle` | Casing, weight, opacity and size of the value captions. |
 
-The card also prints `version 0.9.1 (m0e fork)` in the browser console, so
+The card also prints `version 0.9.2 (m0e fork)` in the browser console, so
 you can tell which module loaded when both are installed.
 
 ------------------------------------------------------------------------
