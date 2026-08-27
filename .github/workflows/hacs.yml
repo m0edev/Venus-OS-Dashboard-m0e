@@ -18,3 +18,18 @@ jobs:
         uses: "hacs/action@main"
         with:
           category: "plugin"
+
+  lang-parity:
+    name: Language file parity
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Check language files against lang-en.js
+        run: node scripts/check-langs.mjs

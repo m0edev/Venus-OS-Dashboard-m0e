@@ -74,8 +74,14 @@ Everything below is specific to this fork and is not in
 | **Renamed custom elements** — card type is `custom:venus-os-dashboard-m0e` | Element names are global to the page, so the two cards could not otherwise be installed together. |
 | **`filename` key in `hacs.json`** | HACS looks for `{repo-name}.js`, which stopped matching once the repository was renamed. |
 | **Fixed `lang-es.js`** | The file began with `port default` instead of `export default`, so the Spanish translation threw on import and silently fell back to English. |
+| **Info list box type** — `type: list` | A box that shows uniform label/value rows for any number of entities. |
+| **Per-box height** — `height:` | Shrink one box in a column; the others share the rest. |
+| **Value formatting** — `map`, `format: duration`, `precision`, `scale: auto` | State-name mapping, `1d 9h` durations, decimals, `W → kW`. |
+| **`unavailable` shown as `—`** | Instead of the literal word. |
+| **Render skipping** | The card previously re-rendered on *every* state change in your HA instance; it now skips ticks where nothing it displays has changed. |
+| **CI language check** | A workflow job fails if any translation file drifts out of sync with `lang-en.js`. |
 
-The card also prints `version 0.7.0 (m0e fork)` in the browser console, so
+The card also prints `version 0.8.0 (m0e fork)` in the browser console, so
 you can tell which module loaded when both are installed.
 
 ------------------------------------------------------------------------
@@ -281,6 +287,94 @@ Notes:
 
 ------------------------------------------------------------------------
 
+### Value formatting
+
+Any value slot can format its raw state. For the five secondary slots
+(`headerEntity`, `entity2`, `footerEntity1/2/3`) and for info-list rows,
+replace the entity string with an object:
+
+``` yaml
+    headerEntity:
+      entity: sensor.venus_os_time_to_go
+      format: duration          # seconds -> "1d 9h" / "2h 05m" / "45m"
+    footerEntity1:
+      entity: sensor.venus_os_battery_voltage
+      precision: 1              # decimals; 26.3841 -> 26.4
+    footerEntity3:
+      entity: sensor.venus_os_mppt_state
+      map:                      # raw state -> display text
+        "3": Bulk
+        "4": Absorption
+        "5": Float
+```
+
+For the **main entity** the same keys go directly on the device (the
+`entity` key itself stays a plain string):
+
+``` yaml
+    entity: sensor.venus_os_grid_power
+    scale: auto                 # 1240 W -> 1.24 kW (also kW->MW, Wh/kWh, VA)
+    precision: 2
+```
+
+All keys are optional and combine freely. Entities whose state is
+`unavailable` or `unknown` display as `—`. Slot objects are YAML-only for
+now — the UI editor edits the `entity` inside them without touching the
+formatting keys.
+
+------------------------------------------------------------------------
+
+### Info list box
+
+Turn any box into a list of uniform label/value rows — handy for alarms,
+temperatures, limits, or anything that doesn't need a big number:
+
+``` yaml
+  3-2:
+    type: list
+    icon: mdi:bell-outline
+    name: Status
+    entities:
+      - entity: sensor.venus_os_battery_voltage
+        label: Battery V
+        precision: 1
+      - entity: sensor.venus_os_mppt_state
+        label: MPPT
+        map: { "3": Bulk, "4": Absorption }
+      - entity: number.venus_os_ac_current_limit
+        label: AC limit
+```
+
+Rows share one font size (the footer size), scroll inside the box when
+there are too many, and accept the same formatting keys as other slots.
+The graph, gauge and side gauge are hidden for a `list` box; anchors and
+links keep working. In the UI editor, the **Info list** panel has the
+type switch and an add/remove row editor.
+
+------------------------------------------------------------------------
+
+### Box height
+
+Fix one box's height as a percentage of its column; the remaining boxes
+share what's left:
+
+``` yaml
+param:
+  boxCol3: 2
+devices:
+  3-1:
+    name: Home
+    entity: sensor.venus_os_ac_loads
+    height: 30
+  3-2:
+    type: list
+    ...
+```
+
+Also editable in the UI editor, under the box's header panel.
+
+------------------------------------------------------------------------
+
 ### New action menu
 
 A new ha-expansion-panel allows configuring box actions.
@@ -362,6 +456,14 @@ A map of device boxes keyed by "<column>-<box>" (for example 1-1, 2-1, 3-2). Eac
 
 - footerLabel1 / footerLabel2 / footerLabel3 — optional captions displayed above the matching footer values.
 
+- headerEntity / entity2 / footerEntity1-3 also accept an object form `{ entity, map, format, precision, scale }` — see "Value formatting".
+
+- map / format / precision / scale — optional formatting for the **main** entity value (device level) — see "Value formatting".
+
+- height — optional fixed height for this box, in % of its column; sibling boxes share the remainder.
+
+- type: list — turns the box into an info list; entities — its list of rows `{ entity, label, ... }` — see "Info list box".
+
 - graph: true — show mini-history graph in that box (requires historical data).
 
 - gauge: true — show vertical gauge fill (expects percentage % to work correctly).
@@ -427,18 +529,7 @@ A map of device boxes keyed by "<column>-<box>" (for example 1-1, 2-1, 3-2). Eac
 
 ### Rounding & numeric formatting
 
-- The dashboard code previously rounded the main entity value but left headerEntity, entity2 and the footer values unrounded. If you want all displayed numbers rounded (or to show 1/2 decimals), add a small helper in fillBox():
-
-  ```js
-  function formatValue(raw) {
-  if (raw === undefined || raw === null) return '';
-  if (raw === 'N/C' || raw === 'unavailable' || raw === 'unknown') return raw;
-  const n = parseFloat(raw);
-  return isNaN(n) ? raw : Math.round(n); // change rounding here if you want decimals
-   }
-  ```
-  
-  Then call formatValue(...) for all state.state uses.
+- Use the `precision` key (per slot, or device-level for the main entity) — see "Value formatting". No code changes needed.
 
 ------------------------------------------------------------------------
 

@@ -56,6 +56,20 @@ export function t(func, key) {
     return translations?.[func]?.[key] || `⚠️ ${func}.${key} ⚠️`; // Si absent, affiche une alerte visuelle
 }
 
+/**************************************************/
+/* les slots d'entite acceptent aussi la forme    */
+/* objet { entity, map, format, ... } (YAML) :    */
+/* l'editeur lit/ecrit alors la cle .entity sans  */
+/* toucher aux options de formatage               */
+/**************************************************/
+function slotEntityOf(v) {
+    return (v && typeof v === "object") ? (v.entity ?? "") : (v ?? "");
+}
+
+function slotWritePath(currentValue, basePath, key) {
+    return (currentValue && typeof currentValue === "object") ? `${basePath}.${key}.entity` : `${basePath}.${key}`;
+}
+
 /***************************************/
 /* fonction de rendu du tab pricipal : */
 /***************************************/
@@ -395,6 +409,16 @@ export function subtabRender(box, config, hass, appendTo) {
                         id="device_name"
                         data-path="devices.${box}.name"
                     ></ha-input>
+                    <ha-input 
+                        class="cell"
+                        label="${t("subtabRender", "box_height")}"
+                        id="device_height"
+                        data-path="devices.${box}.height"
+                        type="number"
+                        min="5"
+                        max="95"
+                        step="1"
+                    ></ha-input>
                 </div>
             </div>
         </ha-expansion-panel>
@@ -608,6 +632,24 @@ export function subtabRender(box, config, hass, appendTo) {
             </div>
         </ha-expansion-panel>
         
+        <!-- INFO LIST -->
+        <ha-expansion-panel outlined id="subPanel_list" header="${t("subtabRender", "list_title")}">
+            <div class="col inner">
+                <div class="row">
+                  <div class="row cell">
+                    ${t("subtabRender", "enable_list")} :
+                    <ha-switch class="cell right" id="list_switch"></ha-switch>
+                  </div>
+                </div>
+                <div id="list-rows" class="col noGap"></div>
+                <div style="display: flex; justify-content: flex-end; align-items: center;">
+                    <ha-icon-button id="add-list-row-button" aria-label="${t("subtabRender", "list_add_row")}">
+                        <ha-icon icon="mdi:plus" style="display: flex;"></ha-icon>
+                    </ha-icon-button>
+                </div>
+            </div>
+        </ha-expansion-panel>
+
         <!-- LINKS -->
         <div class="contMenu">
             <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -915,6 +957,91 @@ export function subtabRender(box, config, hass, appendTo) {
         const field = subTabContent.querySelector(`#${id}`);
         if (field) field.value = config?.devices?.[box]?.[key] ?? "";
     });
+
+    // hauteur fixe de la box (%)
+    const heightField = subTabContent.querySelector('#device_height');
+    const heightVal = config?.devices?.[box]?.height;
+    if (heightField) heightField.value = (heightVal !== undefined && heightVal !== null) ? heightVal : "";
+
+    // --- box type "liste d'infos" : switch + lignes
+    const listSwitch = subTabContent.querySelector('#list_switch');
+    const listRowsHost = subTabContent.querySelector('#list-rows');
+    const addListRowButton = subTabContent.querySelector('#add-list-row-button');
+
+    if (listSwitch && listRowsHost && addListRowButton) {
+
+        if (config?.devices?.[box]?.type === 'list') listSwitch.setAttribute('checked', '');
+
+        listSwitch.addEventListener('change', (e) => {
+            appendTo._config = updateConfigRecursively(appendTo._config, `devices.${box}.type`, e.target.checked ? 'list' : null, true);
+            notifyConfigChange(appendTo);
+        });
+
+        // copie locale des lignes ; les cles de formatage (map, format...)
+        // posees en YAML sont conservees via le spread
+        const listRows = (config?.devices?.[box]?.entities || []).map((r) =>
+            (r && typeof r === 'object') ? { ...r } : { entity: r }
+        );
+
+        const writeListRows = () => {
+            const cleaned = listRows.map((r) => {
+                const out = { ...r };
+                if (!out.label) delete out.label;
+                return out;
+            });
+            appendTo._config = updateConfigRecursively(appendTo._config, `devices.${box}.entities`, cleaned.length ? cleaned : null, true);
+            notifyConfigChange(appendTo);
+        };
+
+        const renderListRows = () => {
+            listRowsHost.innerHTML = '';
+
+            listRows.forEach((row, idx) => {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'row';
+                rowDiv.style.alignItems = 'center';
+
+                const picker = document.createElement('ha-entity-picker');
+                picker.classList.add('cell');
+                picker.hass = hass;
+                picker.label = t("addLink", "entity_picker");
+                picker.value = row.entity ?? "";
+                picker.addEventListener('value-changed', (e) => {
+                    listRows[idx].entity = e?.detail?.value ?? "";
+                    writeListRows();
+                });
+
+                const labelInput = document.createElement('ha-input');
+                labelInput.classList.add('cell');
+                labelInput.label = t("subtabRender", "list_row_name");
+                labelInput.value = row.label ?? "";
+                labelInput.addEventListener('change', (e) => {
+                    listRows[idx].label = (e.target.value || "").trim();
+                    writeListRows();
+                });
+
+                const delBtn = document.createElement('ha-icon-button');
+                delBtn.innerHTML = '<ha-icon icon="mdi:trash-can" style="display: flex;"></ha-icon>';
+                delBtn.addEventListener('click', () => {
+                    listRows.splice(idx, 1);
+                    writeListRows();
+                    renderListRows();
+                });
+
+                rowDiv.appendChild(picker);
+                rowDiv.appendChild(labelInput);
+                rowDiv.appendChild(delBtn);
+                listRowsHost.appendChild(rowDiv);
+            });
+        };
+
+        renderListRows();
+
+        addListRowButton.addEventListener('click', () => {
+            listRows.push({ entity: "" });
+            renderListRows();
+        });
+    }
     iconPicker.value = config?.devices?.[box]?.icon ?? ""; 
     
     iconPicker.hass = hass; // Passe l'objet directement ici
@@ -954,10 +1081,11 @@ export function subtabRender(box, config, hass, appendTo) {
 		selector: { entity: {} },
 	  },
 	];
-	formEntity2.data = { entity2: config?.devices?.[box]?.entity2 ?? "" };
+	formEntity2.data = { entity2: slotEntityOf(config?.devices?.[box]?.entity2) };
 	formEntity2.addEventListener("value-changed", (e) => {
 	  const v = e?.detail?.value || {};
-	  appendTo._config = updateConfigRecursively(appendTo._config, `${basePath}.entity2`, v.entity2 || null, true);
+	  const cur = appendTo._config?.devices?.[box]?.entity2;
+	  appendTo._config = updateConfigRecursively(appendTo._config, slotWritePath(cur, basePath, "entity2"), v.entity2 || null, true);
 	  notifyConfigChange(appendTo);
 	});
 
@@ -1000,10 +1128,11 @@ export function subtabRender(box, config, hass, appendTo) {
 		selector: { entity: {} } 
 	  },
 	];
-	formHeader.data = { headerEntity: config?.devices?.[box]?.headerEntity ?? "" };
+	formHeader.data = { headerEntity: slotEntityOf(config?.devices?.[box]?.headerEntity) };
 	formHeader.addEventListener("value-changed", (e) => {
 	  const v = e?.detail?.value || {};
-	  appendTo._config = updateConfigRecursively(appendTo._config, `${basePath}.headerEntity`, v.headerEntity || null, true);
+	  const cur = appendTo._config?.devices?.[box]?.headerEntity;
+	  appendTo._config = updateConfigRecursively(appendTo._config, slotWritePath(cur, basePath, "headerEntity"), v.headerEntity || null, true);
 	  notifyConfigChange(appendTo);
 	});
 
@@ -1020,10 +1149,11 @@ export function subtabRender(box, config, hass, appendTo) {
 	    selector: { entity: {} } 
 	  },
 	];
-	formFooter1.data = { footerEntity1: config?.devices?.[box]?.footerEntity1 ?? "" };
+	formFooter1.data = { footerEntity1: slotEntityOf(config?.devices?.[box]?.footerEntity1) };
 	formFooter1.addEventListener("value-changed", (e) => {
 	  const v = e?.detail?.value || {};
-	  appendTo._config = updateConfigRecursively(appendTo._config, `${basePath}.footerEntity1`, v.footerEntity1 || null, true);
+	  const cur = appendTo._config?.devices?.[box]?.footerEntity1;
+	  appendTo._config = updateConfigRecursively(appendTo._config, slotWritePath(cur, basePath, "footerEntity1"), v.footerEntity1 || null, true);
 	  notifyConfigChange(appendTo);
 	});
 	
@@ -1058,10 +1188,11 @@ export function subtabRender(box, config, hass, appendTo) {
 		selector: { entity: {} } 
 	  },
 	];
-	formFooter2.data = { footerEntity2: config?.devices?.[box]?.footerEntity2 ?? "" };
+	formFooter2.data = { footerEntity2: slotEntityOf(config?.devices?.[box]?.footerEntity2) };
 	formFooter2.addEventListener("value-changed", (e) => {
 	  const v = e?.detail?.value || {};
-	  appendTo._config = updateConfigRecursively(appendTo._config, `${basePath}.footerEntity2`, v.footerEntity2 || null, true);
+	  const cur = appendTo._config?.devices?.[box]?.footerEntity2;
+	  appendTo._config = updateConfigRecursively(appendTo._config, slotWritePath(cur, basePath, "footerEntity2"), v.footerEntity2 || null, true);
 	  notifyConfigChange(appendTo);
 	});
 
@@ -1078,10 +1209,11 @@ export function subtabRender(box, config, hass, appendTo) {
 		selector: { entity: {} } 
 	  },
 	];
-	formFooter3.data = { footerEntity3: config?.devices?.[box]?.footerEntity3 ?? "" };
+	formFooter3.data = { footerEntity3: slotEntityOf(config?.devices?.[box]?.footerEntity3) };
 	formFooter3.addEventListener("value-changed", (e) => {
 	  const v = e?.detail?.value || {};
-	  appendTo._config = updateConfigRecursively(appendTo._config, `${basePath}.footerEntity3`, v.footerEntity3 || null, true);
+	  const cur = appendTo._config?.devices?.[box]?.footerEntity3;
+	  appendTo._config = updateConfigRecursively(appendTo._config, slotWritePath(cur, basePath, "footerEntity3"), v.footerEntity3 || null, true);
 	  notifyConfigChange(appendTo);
 	});
 	

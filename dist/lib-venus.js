@@ -58,6 +58,141 @@ function labeledValue(baseClass, label, inner, addStyle = "") {
     `;
 }
 
+/**********************************************/
+/* normalise un "slot" d'entite : accepte la  */
+/* chaine historique ("sensor.x") ou l'objet  */
+/* { entity, label, map, format, precision,   */
+/*   scale } pour les options de formatage    */
+/**********************************************/
+function slotConfig(slot) {
+    if (slot && typeof slot === "object") return slot;
+    return { entity: slot };
+}
+
+/**********************************************/
+/* etats non exploitables -> tiret            */
+/**********************************************/
+function displayState(raw) {
+    if (raw === "unavailable" || raw === "unknown" || raw === "" || raw === undefined || raw === null) return "—";
+    return raw;
+}
+
+/**********************************************/
+/* formate des secondes en duree lisible      */
+/* facon Venus OS : 1d 9h / 2h 05m / 45m / 30s*/
+/**********************************************/
+function formatDuration(seconds) {
+    const s = Math.round(Math.abs(seconds));
+    const d = Math.floor(s / 86400);
+    const h = Math.floor((s % 86400) / 3600);
+    const m = Math.floor((s % 3600) / 60);
+
+    if (d > 0) return `${d}d ${h}h`;
+    if (h > 0) return `${h}h ${String(m).padStart(2, "0")}m`;
+    if (m > 0) return `${m}m`;
+    return `${s}s`;
+}
+
+/**********************************************/
+/* arrondi a "precision" decimales, sans      */
+/* zeros superflus si precision non definie   */
+/**********************************************/
+function formatNumberText(n, precision) {
+    if (!Number.isFinite(n)) return String(n);
+    if (Number.isFinite(precision)) return n.toFixed(Math.max(0, Math.min(6, precision)));
+    return String(n);
+}
+
+/**********************************************/
+/* pipeline de formatage d'une valeur :       */
+/* map -> duration -> scale auto -> precision */
+/* retourne { text, unit, num } ; num = valeur*/
+/* numerique (mise a l'echelle) ou NaN        */
+/**********************************************/
+function formatValueCore(raw, unit, opts) {
+    opts = opts || {};
+
+    const shown = displayState(raw);
+
+    // etat non exploitable : pas de traitement numerique
+    if (shown === "—") return { text: "—", unit: "", num: NaN };
+
+    // table de correspondance etat -> texte (states Victron numeriques, enums...)
+    if (opts.map && Object.prototype.hasOwnProperty.call(opts.map, shown)) {
+        return { text: String(opts.map[shown]), unit: "", num: NaN };
+    }
+
+    const n = Number.parseFloat(shown);
+
+    if (!Number.isFinite(n)) return { text: String(shown), unit, num: NaN };
+
+    // duree : la valeur est un nombre de secondes
+    if (opts.format === "duration") {
+        return { text: formatDuration(n), unit: "", num: NaN };
+    }
+
+    let num = n;
+    let outUnit = unit;
+
+    // mise a l'echelle automatique W -> kW (et kW -> MW) au dela de 1000
+    if (opts.scale === "auto") {
+        const up = { "W": "kW", "kW": "MW", "Wh": "kWh", "kWh": "MWh", "VA": "kVA", "var": "kvar" };
+        if (up[outUnit] && Math.abs(num) >= 1000) {
+            num = num / 1000;
+            outUnit = up[outUnit];
+            if (!Number.isFinite(opts.precision)) {
+                return { text: num.toFixed(2), unit: outUnit, num };
+            }
+        }
+    }
+
+    return { text: formatNumberText(num, opts.precision), unit: outUnit, num };
+}
+
+/**********************************************/
+/* resout un slot (chaine ou objet) vers sa   */
+/* valeur formatee                            */
+/**********************************************/
+function formatSlotValue(hass, slot) {
+    const cfg = slotConfig(slot);
+
+    // slot non configure : cellule vide (pas de tiret)
+    if (!cfg.entity) return { text: "", unit: "", num: NaN };
+
+    const state = hass.states[cfg.entity];
+    const raw = state ? state.state : undefined;
+    const unit = state && state.attributes.unit_of_measurement ? state.attributes.unit_of_measurement : "";
+    return formatValueCore(raw, unit, cfg);
+}
+
+/**********************************************/
+/* liste les entity_id dont dependent les     */
+/* rendus de la carte (pour la signature de   */
+/* changement dans set hass)                  */
+/**********************************************/
+export function collectEntityIds(config) {
+    const ids = [];
+    const push = (slot) => {
+        const e = slotConfig(slot).entity;
+        if (typeof e === "string" && e) ids.push(e);
+    };
+
+    Object.values(config?.devices || {}).forEach((device) => {
+        push(device.entity);
+        push(device.entity2);
+        push(device.headerEntity);
+        push(device.footerEntity1);
+        push(device.footerEntity2);
+        push(device.footerEntity3);
+        push(device.sideGaugeEntity);
+        push(device.gaugeWaveEntity);
+        (device.entities || []).forEach(push);
+        Object.values(device.link || {}).forEach((link) => push(link.entity));
+    });
+
+    return ids;
+}
+
 /************************************************/
 /* fonction de rendu du squelette de la carte : */
 /* rend une image si dans le YAML, mode = DEMO  */
@@ -139,6 +274,12 @@ export function addBox(col1, col2, col3, config, appendTo) {
                 box.className = 'box'; // Applique la classe 'box'
 				if (useMaxHeight) {
 					box.style.maxHeight = `${maxHeight}%`;
+				}
+
+				// hauteur fixe par box (en % de la colonne), les autres se partagent le reste
+				const devHeight = Number(config?.devices?.[`${columnIndex + 1}-${i}`]?.height);
+				if (Number.isFinite(devHeight) && devHeight > 0 && devHeight < 100) {
+					box.style.flex = `0 0 ${devHeight}%`;
 				}
 				box.appendChild(sideGauge);
                 box.appendChild(graph);
@@ -251,6 +392,14 @@ export function fillBox(config, styles, isDark, hass, appendTo) {
 		let sensor1Prefix = "";
         let value = state ? state.state : 'N/C';
         let unit = state && state.attributes.unit_of_measurement ? state.attributes.unit_of_measurement : '';
+
+        // formatage optionnel de la valeur principale (cles au niveau device)
+        const mainFmt = { map: device.map, format: device.format, precision: device.precision, scale: device.scale };
+        if (state) {
+            const fmt = formatValueCore(value, unit, mainFmt);
+            value = fmt.text;
+            unit = fmt.unit;
+        }
         
         let addGauge = "";
         let addHeaderEntity = "";
@@ -261,7 +410,7 @@ export function fillBox(config, styles, isDark, hass, appendTo) {
         let addSensor2Style = "";
         let addFooterStyle = "";
         
-        if(device.graph) creatGraph(boxId, device, isDark, appendTo);
+        if(device.graph && device.type !== 'list') creatGraph(boxId, device, isDark, appendTo);
         
         // Gauge visible seulement si la valeur est en % + option gauge activée
 		const gaugeEnabled = (device.gauge === true || device.gauge === "true") && unit === "%";
@@ -315,8 +464,8 @@ export function fillBox(config, styles, isDark, hass, appendTo) {
 		  const vNum = Number.parseFloat(value);
 
 		  if (Number.isFinite(vNum)) {
-			// Valeur sans signe (garde 0 tel quel)
-			value = String(Math.abs(vNum));
+			// Valeur sans signe (garde 0 tel quel), en conservant la precision d'affichage
+			value = formatNumberText(Math.abs(vNum), device.precision);
 
 			if (vNum > 0) {
 			  // bleu vers gauche
@@ -374,48 +523,36 @@ export function fillBox(config, styles, isDark, hass, appendTo) {
         }
             
         if(device.headerEntity) {
-            const stateHeaderEnt = hass.states[device.headerEntity];
-            const valueHeaderEnt = stateHeaderEnt ? stateHeaderEnt.state : '';
-            const unitvalueHeaderEnt = stateHeaderEnt && stateHeaderEnt.attributes.unit_of_measurement ? stateHeaderEnt.attributes.unit_of_measurement : '';
-                
+            const fmtHeader = formatSlotValue(hass, device.headerEntity);
+
             addHeaderEntity = labeledValue(
                 "headerEntity",
                 device.headerLabel,
-                `${valueHeaderEnt}<div class="boxUnit">${unitvalueHeaderEnt}</div>`
+                `${fmtHeader.text}<div class="boxUnit">${fmtHeader.unit}</div>`
             );
         }
         
         if(device.entity2) {
-            const stateEntity2 = hass.states[device.entity2];
-            const valueEntity2 = stateEntity2 ? stateEntity2.state : '';
-            const unitvalueEntity2 = stateEntity2 && stateEntity2.attributes.unit_of_measurement ? stateEntity2.attributes.unit_of_measurement : '';
-                
+            const fmtEntity2 = formatSlotValue(hass, device.entity2);
+
             addEntity2 = labeledValue(
                 "boxSensor2",
                 device.entity2Label,
-                `${valueEntity2}<div class="boxUnit">${unitvalueEntity2}</div>`,
+                `${fmtEntity2.text}<div class="boxUnit">${fmtEntity2.unit}</div>`,
                 addSensor2Style
             );
         }
             
         if(device.footerEntity1) {
-                
-            const stateFooterEnt1 = hass.states[device.footerEntity1];
-            const valueFooterEnt1 = stateFooterEnt1 ? stateFooterEnt1.state : '';
-            const unitvalueFooterEnt1 = stateFooterEnt1 && stateFooterEnt1.attributes.unit_of_measurement ? stateFooterEnt1.attributes.unit_of_measurement : '';
-                
-            const stateFooterEnt2 = hass.states[device.footerEntity2];
-            const valueFooterEnt2 = stateFooterEnt2 ? stateFooterEnt2.state : '';
-            const unitvalueFooterEnt2 = stateFooterEnt2 && stateFooterEnt2.attributes.unit_of_measurement ? stateFooterEnt2.attributes.unit_of_measurement : '';
-                
-            const stateFooterEnt3 = hass.states[device.footerEntity3];
-            const valueFooterEnt3 = stateFooterEnt3 ? stateFooterEnt3.state : '';
-            const unitvalueFooterEnt3 = stateFooterEnt3 && stateFooterEnt3.attributes.unit_of_measurement ? stateFooterEnt3.attributes.unit_of_measurement : '';
-            
+
+            const fmtFooter1 = formatSlotValue(hass, device.footerEntity1);
+            const fmtFooter2 = formatSlotValue(hass, device.footerEntity2);
+            const fmtFooter3 = formatSlotValue(hass, device.footerEntity3);
+
             const footerCells = [
-                { label: device.footerLabel1, value: valueFooterEnt1, unit: unitvalueFooterEnt1 },
-                { label: device.footerLabel2, value: valueFooterEnt2, unit: unitvalueFooterEnt2 },
-                { label: device.footerLabel3, value: valueFooterEnt3, unit: unitvalueFooterEnt3 },
+                { label: device.footerLabel1, value: fmtFooter1.text, unit: fmtFooter1.unit },
+                { label: device.footerLabel2, value: fmtFooter2.text, unit: fmtFooter2.unit },
+                { label: device.footerLabel3, value: fmtFooter3.text, unit: fmtFooter3.unit },
             ];
 
             // si au moins une cellule porte un libelle, on aligne les
@@ -482,16 +619,49 @@ export function fillBox(config, styles, isDark, hass, appendTo) {
 		  divSideGauge.style.display = showSideGauge ? "" : "none";
 		}
 		
-		innerContent.innerHTML = `
+		const boxHeaderHtml = `
             <div class="boxHeader"${addHeaderStyle}>
-                <ha-icon icon="${device.icon}" class="boxIcon"></ha-icon>
-                <div class="boxTitle">${device.name}</div>
+                <ha-icon icon="${escapeHtml(device.icon ?? "")}" class="boxIcon"></ha-icon>
+                <div class="boxTitle">${escapeHtml(device.name ?? "")}</div>
                 ${addHeaderEntity}
-            </div>
+            </div>`;
+
+		if (device.type === 'list') {
+
+			// type "liste d'infos" : lignes uniformes libelle / valeur
+			if (divGraph) divGraph.style.display = "none";
+			if (divGauge) divGauge.style.display = "none";
+			if (divSideGauge) divSideGauge.style.display = "none";
+
+			const rowsHtml = (device.entities || []).map((row) => {
+				const rowCfg = slotConfig(row);
+				const fmt = formatSlotValue(hass, row);
+				return `
+                <div class="listRow">
+                    <div class="listLabel">${escapeHtml(rowCfg.label ?? "")}</div>
+                    <div class="listValue">${fmt.text}<div class="boxUnit">${fmt.unit}</div></div>
+                </div>`;
+			}).join("");
+
+			innerContent.innerHTML = `
+            ${boxHeaderHtml}
+            <div class="listRows"${addFooterStyle}>${rowsHtml}</div>
+        `;
+
+		} else {
+
+			// retour au rendu standard : reafficher graph/gauge si le type a change
+			if (divGraph) divGraph.style.display = "";
+			if (divGauge) divGauge.style.display = "";
+
+			innerContent.innerHTML = `
+            ${boxHeaderHtml}
             <div class="boxSensor1"${addSensorStyle}>${sensor1Prefix} ${value}<div class="boxUnit">${unit}</div></div>
             ${addEntity2}
             ${addFooter}
         `;
+
+		}
         
         /*if (!innerContent.dataset.listener) {
             innerContent.dataset.listener = "true"; // Marque comme ayant un listener
@@ -853,8 +1023,8 @@ export function checkReSize(devices, isDarkTheme, appendTo) {
                     
                 // verification si la fenetre principale de home assistant est inerte (ou si le fenetre de conf card est ouverte)
                 const homeAssistant = window.document.querySelector('home-assistant');
-                const homeAssistantMain = homeAssistant.shadowRoot.querySelector('home-assistant-main');
-                const hasInert = homeAssistantMain.hasAttribute('inert');
+                const homeAssistantMain = homeAssistant?.shadowRoot?.querySelector('home-assistant-main');
+                const hasInert = homeAssistantMain?.hasAttribute('inert') ?? false;
                     
                 // different cas...
                 if (st.mustRedrawLine) { // suite a une mise a jour du yaml

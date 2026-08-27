@@ -371,6 +371,41 @@ export function cssDataLight(user) {
 		.boxFooter.hasLabel {
 			align-items: flex-end;
 		}
+
+		/* --- box type "liste d'infos" : lignes uniformes --- */
+		.listRows {
+			display: flex;
+			flex-direction: column;
+			flex: 1 1 auto;
+			min-height: 0;
+			width: 100%;
+			gap: 2%;
+			overflow-y: auto;
+			z-index: 2;
+		}
+		
+		.listRow {
+			display: flex;
+			justify-content: space-between;
+			align-items: baseline;
+			width: 100%;
+			line-height: 1.2em;
+			gap: 4%;
+		}
+		
+		.listLabel {
+			opacity: 0.7;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+		}
+		
+		.listValue {
+			display: flex;
+			align-items: baseline;
+			gap: 0.25em;
+			white-space: nowrap;
+		}
 		
 		.box{
 		  position: relative; /* important */

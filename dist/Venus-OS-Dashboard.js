@@ -7,7 +7,7 @@
 */
 
 console.info(
-  "%c 🗲 %c - %cVenus OS DB%c - %c 🗲 \n%c version 0.7.0 (m0e fork) ",
+  "%c 🗲 %c - %cVenus OS DB%c - %c 🗲 \n%c version 0.8.0 (m0e fork) ",
   "color: white; font-weight: bold; background: black",
   "color: orange; font-weight: bold; background: blue; font-weight: bold;",
   "color: white; font-weight: bold; background: blue; text-decoration: underline; text-decoration-color: orange; text-decoration-thickness: 5px; text-underline-offset: 2px;",
@@ -24,11 +24,9 @@ import { cssDataLight } from './css-light.js?v=0.1';
 
 class venusOsDashboardCard extends HTMLElement {
 
-  static isDark = true;
+  isDark = true;
 
-  static periodicTaskStarted = false;
-
-  static cycle = 0;
+  periodicTaskStarted = false;
 
   constructor() {
     super();
@@ -97,6 +95,8 @@ class venusOsDashboardCard extends HTMLElement {
       // Check the selected theme
       const isDarkTheme = this._hass.themes.darkMode;
 
+      const wantDark = (isDarkTheme && this.config.theme === 'auto') || this.config.theme === 'dark';
+
       // Create or update the style element based on the theme
       let style = this.querySelector('style');
       if (!style) {
@@ -104,30 +104,44 @@ class venusOsDashboardCard extends HTMLElement {
         this.querySelector('ha-card').appendChild(style);
       }
 
-      if ((isDarkTheme && this.config.theme === 'auto') || this.config.theme === 'dark') {
-        style.textContent = cssDataDark();
-        venusOsDashboardCard.isDark = true;
-      } else {
-        style.textContent = cssDataLight();
-        venusOsDashboardCard.isDark = false;
+      // ne re-injecte la feuille de style que si le theme a change
+      if (this._appliedTheme !== wantDark || !style.textContent) {
+        style.textContent = wantDark ? cssDataDark() : cssDataLight();
+        this._appliedTheme = wantDark;
       }
+
+      this.isDark = wantDark;
     }
 
     // mise en pause (ou ne pas aller plus loin) si mode demo
     if (this.config.demo === true) return;
 
-    // mise en pause (ou ne pas aller plus loin) si debug
-    if (venusOsDashboardCard.cycle >= 10) return;
+    // signature de rendu : etats des entites utilisees + theme + largeur.
+    // set hass est appele pour CHAQUE changement d'etat de l'instance HA ;
+    // si rien de ce que la carte affiche n'a change, on s'arrete ici.
+    const ids = libVenus.collectEntityIds(this.config);
+    const signature = this.isDark + '|' + (this.content?.offsetWidth ?? 0) + '|' +
+      ids.map((id) => {
+        const st = hass.states[id];
+        return id + ':' + (st ? st.state + ':' + (st.attributes.unit_of_measurement ?? '') : 'x');
+      }).join('|');
+
+    if (signature === this._lastSignature && this.config === this._lastConfig && this.periodicTaskStarted) {
+      return;
+    }
+
+    this._lastSignature = signature;
+    this._lastConfig = this.config;
 
     // recuperation des parametres de la carte
     const devices = this.config.devices || [];
     const styles = this.config.styles || "";
 
     // remplissage des box avec les parametres donnés
-    libVenus.fillBox(this.config, styles, venusOsDashboardCard.isDark, hass, this.content);
+    libVenus.fillBox(this.config, styles, this.isDark, hass, this.content);
 
     // verification de changement de taille... si oui re-creation des lignes
-    libVenus.checkReSize(devices, venusOsDashboardCard.isDark, this.content);
+    libVenus.checkReSize(devices, this.isDark, this.content);
 
     // verification des valeurs pour inversion de l'anim path
     libVenus.checkForReverse(this.config, hass, this.content);
@@ -146,7 +160,6 @@ class venusOsDashboardCard extends HTMLElement {
       }
     }
 
-    // venusOsDashboardCard.cycle++;
   }
 
   // Méthode pour générer l'élément de configuration
