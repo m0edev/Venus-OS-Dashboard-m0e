@@ -1,6 +1,7 @@
 {
-  "name": "Venus OS Dashboard",
+  "name": "Venus OS Dashboard (m0e fork)",
   "homeassistant": "2023.1.0",
   "render_readme": true,
-  "content_in_root": false
+  "content_in_root": false,
+  "filename": "Venus-OS-Dashboard.js"
 }

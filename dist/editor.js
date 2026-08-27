@@ -89,4 +89,4 @@ class venusOsDashBoardEditor extends HTMLElement {
     }
 }
 
-customElements.define('venus-os-editor', venusOsDashBoardEditor);
+customElements.define('venus-os-editor-m0e', venusOsDashBoardEditor);

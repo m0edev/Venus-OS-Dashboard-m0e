@@ -108,7 +108,39 @@ Venus OS Dashboard can be configured using the Dashboard UI editor.
 1. In the Dashboard UI, click the three dots in top right corner.
 2. Click **Edit Dashboard**.
 3. Click Plus button to add a new card.
-4. Find **Custom: Venus OS Dashboard** card in the list.
+4. Find **Custom: Venus OS Dashboard (m0e fork)** card in the list.
+
+------------------------------------------------------------------------
+
+### ⚠ This is a fork — it can be installed next to the original
+
+This repository is a fork of
+[skydarc/Venus-OS-Dashboard](https://github.com/skydarc/Venus-OS-Dashboard).
+Custom element names are global to the browser page, so if both cards
+registered the same name the second one to load would throw
+`the name "venus-os-dashboard" has already been used` and never start.
+
+To avoid that, this fork registers its own names:
+
+| | Original | This fork |
+|---|---|---|
+| Card type (YAML) | `custom:venus-os-dashboard` | `custom:venus-os-dashboard-m0e` |
+| Custom element | `venus-os-dashboard` | `venus-os-dashboard-m0e` |
+| Editor element | `venus-os-editor` | `venus-os-editor-m0e` |
+| HACS folder | `/hacsfiles/Venus-OS-Dashboard/` | `/hacsfiles/Venus-OS-Dashboard-m0e/` |
+
+Both can therefore be installed and used at the same time. Point a card at
+whichever one you want with its `type:`; existing cards using
+`custom:venus-os-dashboard` keep using the original and are unaffected.
+
+One caveat: the card injects its stylesheet into the light DOM, so its CSS
+rules are page-global. The two stylesheets are near-identical, but if you
+put an original card and a fork card on the same view with **different**
+`theme:` values, whichever renders last wins for both.
+
+If you would rather not run both, uninstall the original and this fork will
+be the only one — but its `type:` is still `custom:venus-os-dashboard-m0e`,
+so update your cards accordingly.
 
 ------------------------------------------------------------------------
 

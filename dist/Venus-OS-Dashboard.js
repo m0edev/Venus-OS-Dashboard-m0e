@@ -7,7 +7,7 @@
 */
 
 console.info(
-  "%c 🗲 %c - %cVenus OS DB%c - %c 🗲 \n%c version 0.7.0 ",
+  "%c 🗲 %c - %cVenus OS DB%c - %c 🗲 \n%c version 0.7.0 (m0e fork) ",
   "color: white; font-weight: bold; background: black",
   "color: orange; font-weight: bold; background: blue; font-weight: bold;",
   "color: white; font-weight: bold; background: blue; text-decoration: underline; text-decoration-color: orange; text-decoration-thickness: 5px; text-underline-offset: 2px;",
@@ -151,7 +151,7 @@ class venusOsDashboardCard extends HTMLElement {
 
   // Méthode pour générer l'élément de configuration
   static getConfigElement(hass) {
-    const editor = document.createElement('venus-os-editor');
+    const editor = document.createElement('venus-os-editor-m0e');
     editor.hass = hass; // Passe explicitement l'instance de hass à l'éditeur
     return editor;
   }
@@ -178,12 +178,12 @@ class venusOsDashboardCard extends HTMLElement {
   }
 
 }
-customElements.define('venus-os-dashboard', venusOsDashboardCard);
+customElements.define('venus-os-dashboard-m0e', venusOsDashboardCard);
 
 window.customCards = window.customCards || [];
 window.customCards.push({
-  type: 'venus-os-dashboard',
-  name: 'Venus OS Dashboard',
+  type: 'venus-os-dashboard-m0e',
+  name: 'Venus OS Dashboard (m0e fork)',
   preview: true,
   description: 'A DashBoard that looklike Venos OS gui-v2 from Victron.',
 });
