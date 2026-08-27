@@ -21,6 +21,7 @@ export default {
     enable_list: "Als Infoliste anzeigen",
     list_add_row: "Zeile hinzufügen",
     list_row_name: "Name",
+    alarm_entity: "Alarm-Entität — lässt den Rahmen pulsieren (optional)",
     sensor_title: "Hauptsensor-Konfiguration",
     entity_choice: "Entitäts-Auswahl",
     entity2_choice: "Zweite Entitäts-Auswahl",

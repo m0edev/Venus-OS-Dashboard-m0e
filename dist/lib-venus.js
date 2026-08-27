@@ -186,6 +186,7 @@ export function collectEntityIds(config) {
         push(device.footerEntity3);
         push(device.sideGaugeEntity);
         push(device.gaugeWaveEntity);
+        push(device.alarmEntity);
         (device.entities || []).forEach(push);
         Object.values(device.link || {}).forEach((link) => push(link.entity));
     });
@@ -365,6 +366,19 @@ function creatAnchors(colNbrs, boxNbrs, numAnchors, type, appendTo) {
 /* (defini ou auto),                          */
 /**********************************************/
 export function fillBox(config, styles, isDark, hass, appendTo) {
+
+    // style des libelles (captions) : casse, graisse, opacite, taille
+    const labelStyle = styles?.labelStyle || {};
+    const dash = appendTo.querySelector("#dashboard");
+    if (dash) {
+        dash.style.setProperty("--vod-label-transform", labelStyle.case === "normal" ? "none" : "uppercase");
+        if (labelStyle.weight !== undefined) dash.style.setProperty("--vod-label-weight", String(labelStyle.weight));
+        else dash.style.removeProperty("--vod-label-weight");
+        if (labelStyle.opacity !== undefined) dash.style.setProperty("--vod-label-opacity", String(labelStyle.opacity));
+        else dash.style.removeProperty("--vod-label-opacity");
+        if (labelStyle.size !== undefined) dash.style.setProperty("--vod-label-size", String(labelStyle.size));
+        else dash.style.removeProperty("--vod-label-size");
+    }
     
     const devices = config.devices || [];
     
@@ -417,6 +431,15 @@ export function fillBox(config, styles, isDark, hass, appendTo) {
 
 		if (gaugeEnabled) {
 		  divGauge.style.height = `${value}%`;
+
+		  // couleur du remplissage selon le niveau (style VRM) :
+		  // < 20 % rouge, < 50 % orange, sinon bleu par defaut
+		  const gaugePct = Number.parseFloat(value);
+		  divGauge.classList.remove("g-orange", "g-red");
+		  if (Number.isFinite(gaugePct)) {
+			if (gaugePct < 20) divGauge.classList.add("g-red");
+			else if (gaugePct < 50) divGauge.classList.add("g-orange");
+		  }
 		  
 		  // Texture toggle
 		  if (device.gaugeTexture === true || device.gaugeTexture === "true")
@@ -617,6 +640,21 @@ export function fillBox(config, styles, isDark, hass, appendTo) {
 		// Affichage final : uniquement si entity définie + calcul OK
 		if (divSideGauge) {
 		  divSideGauge.style.display = showSideGauge ? "" : "none";
+		}
+
+		// --- Pulsation d'alarme sur la bordure de la box (optionnel) ---
+		// alarmEntity : etat "on"/"alarm"/2 => rouge ; "warning"/1 => orange.
+		// Victron : 0 = pas d'alarme, 1 = warning, 2 = alarme.
+		box.classList.remove("alarmWarn", "alarmCrit");
+
+		if (device.alarmEntity) {
+		  const alarmRaw = String(hass.states?.[device.alarmEntity]?.state ?? "").toLowerCase();
+
+		  if (alarmRaw === "on" || alarmRaw === "2" || alarmRaw === "alarm") {
+			box.classList.add("alarmCrit");
+		  } else if (alarmRaw === "1" || alarmRaw === "warning") {
+			box.classList.add("alarmWarn");
+		  }
 		}
 		
 		const boxHeaderHtml = `

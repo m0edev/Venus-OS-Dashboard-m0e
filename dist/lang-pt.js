@@ -21,6 +21,7 @@ export default {
     enable_list: "Mostrar como lista de informações",
     list_add_row: "Adicionar linha",
     list_row_name: "Nome",
+    alarm_entity: "Entidade de alarme — faz pulsar a borda (opcional)",
     sensor_title: "Configuração do sensor principal",
     entity_choice: "Escolher entidade",
     entity2_choice: "Escolher entidade secundária",

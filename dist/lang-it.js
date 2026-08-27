@@ -21,6 +21,7 @@ export default {
     enable_list: "Mostra come elenco info",
     list_add_row: "Aggiungi riga",
     list_row_name: "Nome",
+    alarm_entity: "Entità allarme — fa pulsare il bordo (opzionale)",
     sensor_title: "Configurazione sensore principale",
     entity_choice: "Selettore entità",
     entity2_choice: "Selettore entità secondaria",

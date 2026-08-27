@@ -21,6 +21,7 @@ export default {
     enable_list: "Afficher en liste d'infos",
     list_add_row: "Ajouter une ligne",
     list_row_name: "Nom",
+    alarm_entity: "Entité d'alarme — fait pulser la bordure (optionnel)",
     sensor_title: "Configuration du capteur principal",
     entity_choice: "Choisir une entité",
     entity2_choice: "Choisir une entité secondaire",

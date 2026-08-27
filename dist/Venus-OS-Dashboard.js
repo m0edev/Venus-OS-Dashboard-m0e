@@ -7,7 +7,7 @@
 */
 
 console.info(
-  "%c 🗲 %c - %cVenus OS DB%c - %c 🗲 \n%c version 0.8.1 (m0e fork) ",
+  "%c 🗲 %c - %cVenus OS DB%c - %c 🗲 \n%c version 0.9.0 (m0e fork) ",
   "color: white; font-weight: bold; background: black",
   "color: orange; font-weight: bold; background: blue; font-weight: bold;",
   "color: white; font-weight: bold; background: blue; text-decoration: underline; text-decoration-color: orange; text-decoration-thickness: 5px; text-underline-offset: 2px;",
@@ -16,11 +16,11 @@ console.info(
   "color: white; font-weight: bold; background: grey"
 );
 
-import './editor.js?v=0.8.1';
-import * as libVenus from './lib-venus.js?v=0.8.1';
+import './editor.js?v=0.9.0';
+import * as libVenus from './lib-venus.js?v=0.9.0';
 
-import { cssDataDark } from './css-dark.js?v=0.8.1';
-import { cssDataLight } from './css-light.js?v=0.8.1';
+import { cssDataDark } from './css-dark.js?v=0.9.0';
+import { cssDataLight } from './css-light.js?v=0.9.0';
 
 class venusOsDashboardCard extends HTMLElement {
 

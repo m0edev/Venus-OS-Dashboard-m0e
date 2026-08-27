@@ -26,7 +26,7 @@ export async function loadTranslations(appendTo) {
   const lang = langRaw.toLowerCase().split("-")[0];
 
   async function tryImport(l) {
-    const url = new URL(`./lang-${l}.js?v=0.8.1`, import.meta.url).toString();
+    const url = new URL(`./lang-${l}.js?v=0.9.0`, import.meta.url).toString();
     return import(url);
   }
 
@@ -419,6 +419,7 @@ export function subtabRender(box, config, hass, appendTo) {
                         max="95"
                         step="1"
                     ></ha-input>
+                    <ha-form class="cell" id="alarm_entity_form"></ha-form>
                 </div>
             </div>
         </ha-expansion-panel>
@@ -962,6 +963,20 @@ export function subtabRender(box, config, hass, appendTo) {
     const heightField = subTabContent.querySelector('#device_height');
     const heightVal = config?.devices?.[box]?.height;
     if (heightField) heightField.value = (heightVal !== undefined && heightVal !== null) ? heightVal : "";
+
+    // entite d'alarme (pulsation de la bordure)
+    const formAlarm = subTabContent.querySelector('#alarm_entity_form');
+    if (formAlarm) {
+        formAlarm.hass = hass;
+        formAlarm.computeLabel = () => t("subtabRender", "alarm_entity");
+        formAlarm.schema = [{ name: "alarmEntity", required: false, selector: { entity: {} } }];
+        formAlarm.data = { alarmEntity: config?.devices?.[box]?.alarmEntity ?? "" };
+        formAlarm.addEventListener("value-changed", (e) => {
+            const v = e?.detail?.value || {};
+            appendTo._config = updateConfigRecursively(appendTo._config, `devices.${box}.alarmEntity`, v.alarmEntity || null, true);
+            notifyConfigChange(appendTo);
+        });
+    }
 
     // --- box type "liste d'infos" : switch + lignes
     const listSwitch = subTabContent.querySelector('#list_switch');

@@ -21,6 +21,7 @@ export default {
     enable_list: "عرض كقائمة معلومات",
     list_add_row: "إضافة صف",
     list_row_name: "الاسم",
+    alarm_entity: "كيان الإنذار — يجعل الإطار ينبض (اختياري)",
     sensor_title: "إعدادات المستشعر الرئيسي",
     entity_choice: "اختيار الكيان",
     entity2_choice: "اختيار كيان ثانوي",

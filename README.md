@@ -80,8 +80,11 @@ Everything below is specific to this fork and is not in
 | **`unavailable` shown as `—`** | Instead of the literal word. |
 | **Render skipping** | The card previously re-rendered on *every* state change in your HA instance; it now skips ticks where nothing it displays has changed. |
 | **CI language check** | A workflow job fails if any translation file drifts out of sync with `lang-en.js`. |
+| **SOC-colored gauge** | The main % gauge fill turns orange below 50 %, red below 20 %. |
+| **Alarm pulse** — `alarmEntity:` | The box border pulses orange/red while an alarm entity is active. |
+| **Label styling** — `styles.labelStyle` | Casing, weight, opacity and size of the value captions. |
 
-The card also prints `version 0.8.1 (m0e fork)` in the browser console, so
+The card also prints `version 0.9.0 (m0e fork)` in the browser console, so
 you can tell which module loaded when both are installed.
 
 ------------------------------------------------------------------------
@@ -287,6 +290,41 @@ Notes:
 
 ------------------------------------------------------------------------
 
+### Appearance
+
+**SOC-colored gauge** — automatic: any box with `gauge: true` fills orange
+below 50 % and red below 20 %, VRM-style. Above 50 % it keeps the default
+blue.
+
+**Alarm pulse** — give a box an `alarmEntity`; while it is active the box
+border pulses:
+
+``` yaml
+    alarmEntity: binary_sensor.venus_os_low_battery
+```
+
+`on`, `2` or `alarm` pulse red; `1` or `warning` pulse orange (Victron
+alarm sensors report 0 / 1 / 2). Also settable from the UI editor, in the
+box's header panel.
+
+**Label styling** — restyle the value captions card-wide, under `styles:`:
+
+``` yaml
+styles:
+  header: auto
+  sensor: auto
+  footer: auto
+  labelStyle:
+    case: normal      # "normal" or default uppercase
+    weight: 400       # font weight (default 600)
+    opacity: 0.8      # default 0.5
+    size: 0.8em       # default 0.7em
+```
+
+All keys optional; omit any to keep its default.
+
+------------------------------------------------------------------------
+
 ### Value formatting
 
 Any value slot can format its raw state. For the five secondary slots
@@ -463,6 +501,8 @@ A map of device boxes keyed by "<column>-<box>" (for example 1-1, 2-1, 3-2). Eac
 - height — optional fixed height for this box, in % of its column; sibling boxes share the remainder.
 
 - type: list — turns the box into an info list; entities — its list of rows `{ entity, label, ... }` — see "Info list box".
+
+- alarmEntity — optional entity whose active state makes the box border pulse — see "Appearance".
 
 - graph: true — show mini-history graph in that box (requires historical data).
 

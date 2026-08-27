@@ -21,6 +21,7 @@ export default {
     enable_list: "Toon als infolijst",
     list_add_row: "Rij toevoegen",
     list_row_name: "Naam",
+    alarm_entity: "Alarm-entiteit — laat de rand pulseren (optioneel)",
     sensor_title: "Hoofd-sensor configuratie",
     entity_choice: "Kies entiteit",
     entity2_choice: "Kies secundaire entiteit",

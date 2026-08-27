@@ -21,6 +21,7 @@ export default {
     enable_list: "Display as info list",
     list_add_row: "Add row",
     list_row_name: "Name",
+    alarm_entity: "Alarm entity — pulses the border (optional)",
     sensor_title: "Main sensor configuration",
     entity_choice: "Entity picker",
     entity2_choice: "Secondary entity picker",

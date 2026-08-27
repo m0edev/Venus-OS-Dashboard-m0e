@@ -261,6 +261,14 @@ export function cssDataLight(user) {
 			overflow: hidden;
 		}
 
+		.gauge.g-orange {
+			background: linear-gradient(to bottom, #e8a33d, #e8a33d);
+		}
+		
+		.gauge.g-red {
+			background: linear-gradient(to bottom, #d9534f, #d9534f);
+		}
+		
 		.gauge.gaugeTexture::before {
 		    content: "";
 		    position: absolute;
@@ -330,12 +338,12 @@ export function cssDataLight(user) {
 
 		/* --- libelles optionnels au dessus des valeurs --- */
 		.entityLabel {
-			font-size: 0.7em;
+			font-size: var(--vod-label-size, 0.7em);
 			line-height: 1.2em;
-			font-weight: 600;
-			text-transform: uppercase;
+			font-weight: var(--vod-label-weight, 600);
+			text-transform: var(--vod-label-transform, uppercase);
 			letter-spacing: 0.08em;
-			opacity: 0.5;
+			opacity: var(--vod-label-opacity, 0.5);
 			max-width: 100%;
 			overflow: hidden;
 			text-overflow: ellipsis;
@@ -409,6 +417,22 @@ export function cssDataLight(user) {
 		
 		.box{
 		  position: relative; /* important */
+		}
+		
+		/* --- pulsation d'alarme sur la bordure de la box --- */
+		@keyframes vodAlarmPulse {
+			0%, 100% { border-color: var(--box-shadow-color); box-shadow: none; }
+			50% { border-color: var(--vod-alarm-color); box-shadow: 0 0 8px 1px var(--vod-alarm-color); }
+		}
+		
+		.box.alarmWarn {
+			--vod-alarm-color: #e8a33d;
+			animation: vodAlarmPulse 1.6s ease-in-out infinite;
+		}
+		
+		.box.alarmCrit {
+			--vod-alarm-color: #d9534f;
+			animation: vodAlarmPulse 1.1s ease-in-out infinite;
 		}
 
 		.sideGauge{

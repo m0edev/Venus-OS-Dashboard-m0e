@@ -21,6 +21,7 @@ export default {
     enable_list: "Pokaż jako listę informacji",
     list_add_row: "Dodaj wiersz",
     list_row_name: "Nazwa",
+    alarm_entity: "Encja alarmu — obramowanie pulsuje (opcjonalnie)",
     sensor_title: "Konfiguracja głównego sensora",
     entity_choice: "Wybór encji",
     entity2_choice: "Wybór encji pomocniczej",

@@ -21,6 +21,7 @@ export default {
     enable_list: "Bilgi listesi olarak göster",
     list_add_row: "Satır ekle",
     list_row_name: "Ad",
+    alarm_entity: "Alarm varlığı — kenarlık yanıp söner (isteğe bağlı)",
     sensor_title: "Ana sensör yapılandırması",
     entity_choice: "Varlık seçimi",
     entity2_choice: "İkincil varlık seçimi",
