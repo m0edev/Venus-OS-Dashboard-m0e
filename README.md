@@ -1,6 +1,4 @@
-# 🗲 Venus OS Dashboard 🗲
-
-![venus](assets/preview1.gif) ![venus](assets/preview2.png)
+# 🗲 Venus OS Dashboard — m0e fork 🗲
 
 ------------------------------------------------------------------------
 
@@ -12,6 +10,11 @@ Assistant](https://www.home-assistant.io/) Dashboard UI.
 
 It visually matches the VRM / Venus OS interface while remaining fully
 customizable within Home Assistant.
+
+This repository is a fork of
+[skydarc/Venus-OS-Dashboard](https://github.com/skydarc/Venus-OS-Dashboard),
+renamed so it can be installed **alongside** the original rather than
+replacing it. See [Fork changes](#-fork-changes) below.
 
 ------------------------------------------------------------------------
 
@@ -60,23 +63,51 @@ Some features are inspired by KeonHHH's fork — thanks to him 🙏
 
 ------------------------------------------------------------------------
 
+## 🍴 Fork changes
+
+Everything below is specific to this fork and is not in
+[skydarc/Venus-OS-Dashboard](https://github.com/skydarc/Venus-OS-Dashboard):
+
+| Change | Why |
+|---|---|
+| **Optional value labels** — `headerLabel`, `entity2Label`, `footerLabel1/2/3` | A bare number in a footer cell does not say what it is. |
+| **Renamed custom elements** — card type is `custom:venus-os-dashboard-m0e` | Element names are global to the page, so the two cards could not otherwise be installed together. |
+| **`filename` key in `hacs.json`** | HACS looks for `{repo-name}.js`, which stopped matching once the repository was renamed. |
+| **Fixed `lang-es.js`** | The file began with `port default` instead of `export default`, so the Spanish translation threw on import and silently fell back to English. |
+
+The card also prints `version 0.7.0 (m0e fork)` in the browser console, so
+you can tell which module loaded when both are installed.
+
+------------------------------------------------------------------------
+
 # 📦 Installation
 
 ## 🔹 HACS (Recommended)
 
-[![HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=skydarc&repository=Venus-OS-Dashboard&category=plugin)
+This fork is not in the HACS default store, so it has to be added as a
+custom repository:
 
 **1.** Make sure [HACS](https://hacs.xyz/) is installed in your Home Assistant instance
 **2.** Add this repository as a custom repository in HACS:
    - Go to HACS
    - Click the three dots in the top right corner
    - Select **Custom repositories**
-   - Add the URL of this repository
-   - Select **Dashboard** as the category
-**3.** Click **Install** in HACS
-**4.** Restart Home Assistant
+   - Repository: `https://github.com/m0edev/Venus-OS-Dashboard-m0e`
+   - Type: **Dashboard**
+   - Click **ADD**
+**3.** Find **Venus OS Dashboard (m0e fork)** in HACS and click **Download**
 
-And voilà! Venus OS Dashboard should now be available in the Lovelace card picker menu.
+   If the search does not find it, open **Custom repositories** again and
+   click the entry's name — that opens its page directly.
+**4.** Hard-refresh the browser (Ctrl+Shift+R) — the old JS is cached aggressively
+
+HACS installs to `/hacsfiles/Venus-OS-Dashboard-m0e/` and registers the
+Lovelace resource for you, unless your dashboard is in YAML mode — then add
+`/hacsfiles/Venus-OS-Dashboard-m0e/Venus-OS-Dashboard.js` yourself under
+Settings → Dashboards → Resources, as a **JavaScript Module**.
+
+And voilà! **Venus OS Dashboard (m0e fork)** should now be available in the
+Lovelace card picker menu.
 
 Enjoy! 🎉
 
@@ -84,17 +115,15 @@ Enjoy! 🎉
 
 ## 🔹 Manual Installation
 
-**1.**  Copy the `venus` folder into your `www` directory.
+**1.**  Copy the contents of this repository's `dist` folder into
+        `www/venus-os-dashboard-m0e` in your Home Assistant config
+        directory. Keep all the files together — the card imports
+        `editor.js`, `lib-venus.js`, the `css-*.js` and the `lang-*.js`
+        files as ES modules at runtime.
 **2.**  Go to Settings → Dashboards → Resources.
 **3.**  Add:
 
-If placed directly in `www`:
-
-    /local/venus/venus.js
-
-If placed in `www/community`:
-
-    /local/community/venus/venus.js
+    /local/venus-os-dashboard-m0e/Venus-OS-Dashboard.js
 
 **4.**  Select **JavaScript Module**.
 **5.**  Restart Home Assistant.
@@ -160,7 +189,8 @@ The animationThreshold parameter controls (for each link) when the animated ball
 
 You can now define a **maximum height per box**, allowing bottom anchors like in the original version.
 
-![venus](assets/preview3.png)
+Set it in the editor's first tab, under *Box's max height (%)*, or as
+`param.maxHeigth` in YAML.
 
 ------------------------------------------------------------------------
 
@@ -182,39 +212,29 @@ The arrow :
 
 Again, as Venus-OS, you can add a small vertical gauge on the right side of any box.
 
-![venus](assets/preview4.png)
+In the editor, open the box's *Side gauge configuration* panel and define:
 
-Configuration example:
+ - An entity (`sideGaugeEntity`)
 
-![venus](assets/preview5.png)
+ - A maximum value (`sideGaugeMax`)
 
-Just define:
-
- - An entity
-
- - A maximum value
-
-and voilà!
+and voilà! The fill colour follows the value: green when negative, blue up
+to 70 %, orange from 70 %, red from 90 %. The gauge stays hidden unless both
+keys are set and the entity is numeric.
 
 ------------------------------------------------------------------------
 
 ### Main Gauge Enhancements
 
-New dedicated configuration ha-expansion-panel:
-
-![venus](assets/preview6.png)
+New dedicated configuration ha-expansion-panel: *Main gauge configuration*.
 
 This menu is **disabled** if the main entity unit is not **"%"**.
 
 Options include:
 
- - Background texture (for tank level style display)
+ - Background texture, for a tank level style display (`gaugeTexture`)
 
- ![venus](assets/preview7.png)
-
- - Wave animation (Venus OS filling effect)
-
- ![venus](assets/preview2.gif)
+ - Wave animation, the Venus OS filling effect (`gaugeWaveEntity`)
 
 ------------------------------------------------------------------------
 
@@ -263,9 +283,7 @@ Notes:
 
 ### New action menu
 
-A new ha-expansion-panel allows configuring box actions:
-
-![venus](assets/preview8.png)
+A new ha-expansion-panel allows configuring box actions.
 
 In UI Editor, only the "tap" action is available, but technically, **YAML also supports "hold" and "double tap"**.
 
